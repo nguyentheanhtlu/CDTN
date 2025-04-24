@@ -1,0 +1,171 @@
+import { Request, Response } from 'express';
+import { Order } from '../models/order.model';
+import { Cart } from '../models/cart.model';
+import { Product } from '../models/product.model';
+import { payWithVNPay, payWithMoMo } from './payment.controller'; // Import các hàm thanh toán
+
+interface AuthRequest extends Request {
+    user?: any;
+}
+
+// Tạo đơn hàng mới
+export const createOrder = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user._id;
+        const { shippingAddress, paymentMethod } = req.body;
+
+        // Lấy giỏ hàng của người dùng
+        const cart = await Cart.findOne({ user: userId })
+            .populate('items.product');
+
+        if (!cart || cart.items.length === 0) {
+            return res.status(400).json({ message: 'Giỏ hàng trống' });
+        }
+
+        // Kiểm tra số lượng tồn kho
+        for (const item of cart.items) {
+            const product = item.product as any;
+            if (!product.isAvailable || product.stock < item.quantity) {
+                return res.status(400).json({
+                    message: `Sản phẩm ${product.name} không đủ số lượng`
+                });
+            }
+        }
+
+        // Tạo đơn hàng
+        const order = await Order.create({
+            user: userId,
+            items: cart.items,
+            totalAmount: cart.totalAmount,
+            shippingAddress,
+            paymentMethod
+        });
+
+        // Cập nhật số lượng tồn kho và số lượng đã bán
+        for (const item of cart.items) {
+            const product = await Product.findById(item.product);
+            if (product) {
+                product.stock -= item.quantity;
+                product.sold += item.quantity;
+                await product.save();
+            }
+        }
+
+        // Xóa giỏ hàng
+        await Cart.findByIdAndDelete(cart._id);
+
+        // Kiểm tra phương thức thanh toán và chuyển hướng
+        if (paymentMethod === 'VNPay') {
+            return payWithVNPay(req, res);
+        } else if (paymentMethod === 'MoMo') {
+            return payWithMoMo(req, res);
+        }
+
+        res.status(201).json({
+            message: 'Đặt hàng thành công',
+            order
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi khi tạo đơn hàng', error });
+    }
+};
+
+// Admin: Cập nhật trạng thái đơn hàng
+export const updateOrderStatus = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { orderStatus } = req.body;
+
+        const order = await Order.findById(id);
+        if (!order) {
+            return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
+        }
+
+        order.orderStatus = orderStatus;
+        if (orderStatus === 'DELIVERED') {
+            order.paymentStatus = 'PAID';
+        }
+
+        await order.save();
+
+        res.json({
+            message: 'Cập nhật trạng thái đơn hàng thành công',
+            order
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi khi cập nhật trạng thái đơn hàng', error });
+    }
+};
+
+// User: Lấy danh sách đơn hàng của người dùng
+export const getUserOrders = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user._id;
+        const orders = await Order.find({ user: userId })
+            .populate('items.product', 'name price images')
+            .sort({ createdAt: -1 });
+
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi khi lấy danh sách đơn hàng', error });
+    }
+};
+
+// Admin: Lấy tất cả đơn hàng
+export const getAllOrders = async (req: Request, res: Response) => {
+    try {
+        const { status, page = 1, limit = 10 } = req.query;
+        const query: any = {};
+
+        if (status) {
+            query.orderStatus = status;
+        }
+
+        const skip = (Number(page) - 1) * Number(limit);
+
+        const [orders, total] = await Promise.all([
+            Order.find(query)
+                .populate('user', 'fullName email')
+                .populate('items.product', 'name price images')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(Number(limit)),
+            Order.countDocuments(query)
+        ]);
+
+        res.json({
+            orders,
+            total,
+            page: Number(page),
+            totalPages: Math.ceil(total / Number(limit))
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi khi lấy danh sách đơn hàng', error });
+    }
+};
+
+// Lấy chi tiết đơn hàng
+export const getOrderDetail = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user._id;
+        const isAdmin = req.user.role === 'admin';
+
+        const order = await Order.findById(id)
+            .populate('user', 'fullName email')
+            .populate('items.product', 'name price images');
+
+        if (!order) {
+            return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
+        }
+
+        // Chỉ admin hoặc chủ đơn hàng mới có thể xem
+        if (!isAdmin && order.user !== userId) {
+            return res.status(403).json({ message: 'Không có quyền truy cập' });
+        }
+
+        res.json(order);
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi khi lấy chi tiết đơn hàng', error });
+    }
+}; 
