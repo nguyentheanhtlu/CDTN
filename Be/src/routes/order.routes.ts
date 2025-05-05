@@ -9,14 +9,14 @@ router.use((req: any, res: any, next: any) => {
     authenticateToken(req, res , next);
 });
 router.post('/', orderController.createOrder);
-// router.get('/my-orders', orderController.getUserOrders);
-// router.get('/:id', orderController.getOrderDetail);
+router.get('/my-orders', orderController.getUserOrders);
+router.get('/:id', orderController.getOrderDetail);
 
-// // Admin routes
-// router.use((req: any, res: any, next: any) => {
-//     isAdmin(req, res, next);
-// });
-// router.get('/', orderController.getAllOrders);
-// router.put('/:id/status', orderController.updateOrderStatus);
+// Admin routes
+router.use((req: any, res: any, next: any) => {
+    isAdmin(req, res, next);
+});
+router.get('/', orderController.getAllOrders);
+router.put('/:id/status', orderController.updateOrderStatus);
 
 export default router; 

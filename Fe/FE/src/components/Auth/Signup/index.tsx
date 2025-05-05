@@ -1,8 +1,67 @@
+"use client";
+
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
+import { register } from "@/api/auth.api";
+import VerifyEmail from "../VerifyEmail";
+import { useRouter } from "next/navigation";
 
 const Signup = () => {
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    retype: ""
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
+  const [showVerify, setShowVerify] = useState(false);
+  const router = useRouter();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name === "re-type-password" ? "retype" : e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (!form.name || !form.email || !form.password || !form.retype) {
+      setError("Please fill all required fields");
+      return;
+    }
+    if (form.password !== form.retype) {
+      setError("Passwords do not match");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await register({ email: form.email, password: form.password, fullName: form.name });
+      // Giả sử API trả về userId trong res.data.userId
+      setUserId(res.data.userId || res.data.id || res.data._id);
+      setShowVerify(true);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (showVerify && userId) {
+    return (
+      <VerifyEmail
+        userId={userId}
+        onSuccess={() => {
+          setShowVerify(false);
+          router.push("/signin");
+        }}
+        onBack={() => setShowVerify(false)}
+        onError={msg => setError(msg)}
+      />
+    );
+  }
+
   return (
     <>
       <Breadcrumb title={"Signup"} pages={["Signup"]} />
@@ -87,17 +146,18 @@ const Signup = () => {
             </span>
 
             <div className="mt-5.5">
-              <form>
+              <form onSubmit={handleSubmit}>
                 <div className="mb-5">
                   <label htmlFor="name" className="block mb-2.5">
                     Full Name <span className="text-red">*</span>
                   </label>
-
                   <input
                     type="text"
                     name="name"
                     id="name"
                     placeholder="Enter your full name"
+                    value={form.name}
+                    onChange={handleChange}
                     className="rounded-lg border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-3 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                   />
                 </div>
@@ -106,12 +166,13 @@ const Signup = () => {
                   <label htmlFor="email" className="block mb-2.5">
                     Email Address <span className="text-red">*</span>
                   </label>
-
                   <input
                     type="email"
                     name="email"
                     id="email"
                     placeholder="Enter your email address"
+                    value={form.email}
+                    onChange={handleChange}
                     className="rounded-lg border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-3 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                   />
                 </div>
@@ -120,13 +181,14 @@ const Signup = () => {
                   <label htmlFor="password" className="block mb-2.5">
                     Password <span className="text-red">*</span>
                   </label>
-
                   <input
                     type="password"
                     name="password"
                     id="password"
                     placeholder="Enter your password"
                     autoComplete="on"
+                    value={form.password}
+                    onChange={handleChange}
                     className="rounded-lg border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-3 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                   />
                 </div>
@@ -135,22 +197,26 @@ const Signup = () => {
                   <label htmlFor="re-type-password" className="block mb-2.5">
                     Re-type Password <span className="text-red">*</span>
                   </label>
-
                   <input
                     type="password"
                     name="re-type-password"
                     id="re-type-password"
                     placeholder="Re-type your password"
                     autoComplete="on"
+                    value={form.retype}
+                    onChange={handleChange}
                     className="rounded-lg border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-3 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                   />
                 </div>
 
+                {error && <div className="text-red-500 text-sm mb-2 text-center">{error}</div>}
+
                 <button
                   type="submit"
                   className="w-full flex justify-center font-medium text-white bg-dark py-3 px-6 rounded-lg ease-out duration-200 hover:bg-blue mt-7.5"
+                  disabled={loading}
                 >
-                  Create Account
+                  {loading ? "Creating..." : "Create Account"}
                 </button>
 
                 <p className="text-center mt-6">

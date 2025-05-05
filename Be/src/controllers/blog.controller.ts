@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import { Blog } from '../models/blog.model';
 import { IUser } from '../models/user.model';
-import { uploadService } from '../services/upload.service';
+import { CloudinaryService } from '../services/cloudinary.service';
 
 // Thêm interface cho Request với user
 
@@ -17,9 +17,9 @@ export const blogController = {
             const { title, content, tags, status } = req.body;
             let thumbnailUrl = '';
 
-            // Upload thumbnail to Firebase if provided
+            // Upload thumbnail to Cloudinary if provided
             if (req.file) {
-                thumbnailUrl = await uploadService.uploadFile(req.file, 'blog-thumbnails');
+                thumbnailUrl = await CloudinaryService.uploadFile(req.file, 'blog-thumbnails');
             }
 
             const blog = new Blog({
@@ -111,12 +111,16 @@ export const blogController = {
 
             // Upload new thumbnail if provided
             if (req.file) {
-                // Delete old thumbnail from Firebase if exists
+                // Delete old thumbnail from Cloudinary if exists
                 if (oldBlog.thumbnail) {
-                    await uploadService.deleteFile(oldBlog.thumbnail);
+                    try {
+                        await CloudinaryService.deleteFile(oldBlog.thumbnail);
+                    } catch (error) {
+                        console.error('Error deleting old thumbnail:', error);
+                    }
                 }
                 // Upload new thumbnail
-                updateData.thumbnail = await uploadService.uploadFile(req.file, 'blog-thumbnails');
+                updateData.thumbnail = await CloudinaryService.uploadFile(req.file, 'blog-thumbnails');
             }
 
             const blog = await Blog.findByIdAndUpdate(
@@ -139,9 +143,13 @@ export const blogController = {
                 return res.status(404).json({ message: 'Blog not found' });
             }
 
-            // Delete thumbnail from Firebase if exists
+            // Delete thumbnail from Cloudinary if exists
             if (blog.thumbnail) {
-                await uploadService.deleteFile(blog.thumbnail);
+                try {
+                    await CloudinaryService.deleteFile(blog.thumbnail);
+                } catch (error) {
+                    console.error('Error deleting thumbnail:', error);
+                }
             }
 
             await Blog.findByIdAndDelete(req.params.id);

@@ -2,8 +2,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const vnpayConfig = {
-  vnp_TmnCode: process.env.VNP_TMN_CODE || "GSO664Y1",
-  vnp_HashSecret: process.env.VNP_HASH_SECRET || "YSIBZM6K3QPWR2GXB5UF6QPSBT5BQRP5",
+  vnp_TmnCode: process.env.VNP_TMN_CODE || "7QVSD49C",
+  vnp_HashSecret: process.env.VNP_HASH_SECRET || "8GGXGQKFU2T23K7DY3P06NZCN6TZJ0VA",
   vnp_Url: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
   vnp_Api: "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction",
   vnp_ReturnUrl: process.env.VNP_RETURN_URL || 'http://localhost:3000/payment/vnpay_return'

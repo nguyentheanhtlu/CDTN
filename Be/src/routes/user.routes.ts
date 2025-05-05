@@ -1,30 +1,24 @@
-import { Router, Request, Response, NextFunction } from 'express';
-import * as userController from '../controllers/user.controller';
-import { authenticateToken } from '../middlewares/auth.middleware';
-import { uploadAvatar } from '../middlewares/upload.middleware';
+import { Router } from 'express';
+import { getProfile, updateProfile, changePassword, updateAvatar, grantVoucherToUser, removeVoucherFromUser, getUserVouchers, getAllUsersWithVouchers, getUserVoucherHistory, getUserAddresses, addUserAddress, updateUserAddress, deleteUserAddress, setDefaultUserAddress } from '../controllers/user.controller';
+import { authenticateToken, isAdmin } from '../middlewares/auth.middleware';
+import { upload } from '../middlewares/upload.middleware';
 
 const router = Router();
 
-// Middleware để xác thực cho tất cả routes
-router.use((req: Request, res: Response, next: NextFunction) => {
-    authenticateToken(req as any, res, next);
-});
-
-// Cast request type để phù hợp với controller
-router.get('/profile', (req: Request, res: Response, next: NextFunction) => {
-    userController.getProfile(req as any, res).catch(next);
-});
-
-router.put('/profile', (req: Request, res: Response, next: NextFunction) => {
-    userController.updateProfile(req as any, res).catch(next);
-});
-
-router.put('/change-password', (req: Request, res: Response, next: NextFunction) => {
-    userController.changePassword(req as any, res).catch(next);
-});
-
-router.put('/avatar', uploadAvatar, (req: Request, res: Response, next: NextFunction) => {
-    userController.updateAvatar(req as any, res).catch(next);
-});
+// Routes với authentication
+router.get('/profile', authenticateToken, getProfile);
+router.put('/profile', authenticateToken, updateProfile);
+router.put('/change-password', authenticateToken, changePassword);
+router.put('/avatar', authenticateToken, upload.single('avatar'), updateAvatar);
+router.post('/:userId/voucher', authenticateToken, isAdmin, grantVoucherToUser);
+router.delete('/:userId/voucher/:voucherIndex', authenticateToken, isAdmin, removeVoucherFromUser);
+router.get('/:userId/vouchers', authenticateToken, getUserVouchers);
+router.get('/admin/all-users-with-vouchers', authenticateToken, isAdmin, getAllUsersWithVouchers);
+router.get('/:userId/voucher-history', authenticateToken, getUserVoucherHistory);
+router.get('/addresses', authenticateToken, getUserAddresses);
+router.post('/addresses', authenticateToken, addUserAddress);
+router.put('/addresses/:index', authenticateToken, updateUserAddress);
+router.delete('/addresses/:index', authenticateToken, deleteUserAddress);
+router.put('/addresses/:index/default', authenticateToken, setDefaultUserAddress);
 
 export default router; 

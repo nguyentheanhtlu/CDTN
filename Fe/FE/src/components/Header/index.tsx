@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import CustomSelect from "./CustomSelect";
 import { menuData } from "./menuData";
@@ -9,12 +9,18 @@ import { useSelector } from "react-redux";
 import { selectTotalPrice } from "@/redux/features/cart-slice";
 import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
 import Image from "next/image";
+import { getUserInfo, uploadAvatar } from "@/api/auth.api";
 
 const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [stickyMenu, setStickyMenu] = useState(false);
   const { openCartModal } = useCartModalContext();
+  const [user, setUser] = useState<any>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarMessage, setAvatarMessage] = useState<string | null>(null);
 
   const product = useAppSelector((state) => state.cartReducer.items);
   const totalPrice = useSelector(selectTotalPrice);
@@ -36,6 +42,71 @@ const Header = () => {
     window.addEventListener("scroll", handleStickyMenu);
   });
 
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (token) {
+      getUserInfo()
+        .then(res => setUser(res.data))
+        .catch(() => setUser(null));
+    } else {
+      setUser(null);
+    }
+  }, []);
+
+  // Listen for token changes (login/logout from other tabs or after login)
+  useEffect(() => {
+    function handleStorage(e: StorageEvent) {
+      if (e.key === 'token') {
+        const token = e.newValue;
+        if (token) {
+          getUserInfo()
+            .then(res => setUser(res.data))
+            .catch(() => setUser(null));
+        } else {
+          setUser(null);
+        }
+      }
+    }
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  // Listen for token changes in this tab (after login)
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (token && !user) {
+      getUserInfo()
+        .then(res => setUser(res.data))
+        .catch(() => setUser(null));
+    }
+    if (!token && user) {
+      setUser(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typeof window !== 'undefined' ? localStorage.getItem('token') : null]);
+
+  // Đóng dropdown khi click ra ngoài
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    if (showDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showDropdown]);
+
+
+  const handleSignOut = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+    window.location.reload();
+  };
+
   const options = [
     { label: "All Categories", value: "0" },
     { label: "Desktop", value: "1" },
@@ -47,6 +118,25 @@ const Header = () => {
     { label: "Tablet", value: "7" },
   ];
 
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const response = await uploadAvatar(file);
+        const avatarUrl = response.data.avatar;
+        setAvatarPreview(avatarUrl);
+        setAvatarMessage('Cập nhật avatar thành công!');
+        setTimeout(() => setAvatarMessage(null), 3000);
+        const userRes = await getUserInfo();
+        setUser(userRes.data);
+      } catch (error) {
+        setAvatarMessage('Cập nhật avatar thất bại!');
+        setTimeout(() => setAvatarMessage(null), 3000);
+        console.error('Upload avatar failed:', error);
+      }
+    }
+  };
+
   return (
     <header
       className={`fixed left-0 top-0 w-full z-9999 bg-white transition-all ease-in-out duration-300 ${
@@ -56,9 +146,8 @@ const Header = () => {
       <div className="max-w-[1170px] mx-auto px-4 sm:px-7.5 xl:px-0">
         {/* <!-- header top start --> */}
         <div
-          className={`flex flex-col lg:flex-row gap-5 items-end lg:items-center xl:justify-between ease-out duration-200 ${
-            stickyMenu ? "py-4" : "py-6"
-          }`}
+          className={`flex flex-col lg:flex-row gap-5 items-end lg:items-center xl:justify-between ease-out duration-200 ${stickyMenu ? "py-4" : "py-6"}`}
+          style={{ marginLeft: -130 }}
         >
           {/* <!-- header top left --> */}
           <div className="xl:w-auto flex-col sm:flex-row w-full flex sm:justify-between sm:items-center gap-5 sm:gap-10">
@@ -148,7 +237,7 @@ const Header = () => {
                   24/7 SUPPORT
                 </span>
                 <p className="font-medium text-custom-sm text-dark">
-                  (+965) 7492-3477
+                  (+84) 981-632302
                 </p>
               </div>
             </div>
@@ -158,37 +247,95 @@ const Header = () => {
 
             <div className="flex w-full lg:w-auto justify-between items-center gap-5">
               <div className="flex items-center gap-5">
-                <Link href="/signin" className="flex items-center gap-2.5">
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M12 1.25C9.37666 1.25 7.25001 3.37665 7.25001 6C7.25001 8.62335 9.37666 10.75 12 10.75C14.6234 10.75 16.75 8.62335 16.75 6C16.75 3.37665 14.6234 1.25 12 1.25ZM8.75001 6C8.75001 4.20507 10.2051 2.75 12 2.75C13.7949 2.75 15.25 4.20507 15.25 6C15.25 7.79493 13.7949 9.25 12 9.25C10.2051 9.25 8.75001 7.79493 8.75001 6Z"
-                      fill="#3C50E0"
-                    />
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M12 12.25C9.68646 12.25 7.55494 12.7759 5.97546 13.6643C4.4195 14.5396 3.25001 15.8661 3.25001 17.5L3.24995 17.602C3.24882 18.7638 3.2474 20.222 4.52642 21.2635C5.15589 21.7761 6.03649 22.1406 7.22622 22.3815C8.41927 22.6229 9.97424 22.75 12 22.75C14.0258 22.75 15.5808 22.6229 16.7738 22.3815C17.9635 22.1406 18.8441 21.7761 19.4736 21.2635C20.7526 20.222 20.7512 18.7638 20.7501 17.602L20.75 17.5C20.75 15.8661 19.5805 14.5396 18.0246 13.6643C16.4451 12.7759 14.3136 12.25 12 12.25ZM4.75001 17.5C4.75001 16.6487 5.37139 15.7251 6.71085 14.9717C8.02681 14.2315 9.89529 13.75 12 13.75C14.1047 13.75 15.9732 14.2315 17.2892 14.9717C18.6286 15.7251 19.25 16.6487 19.25 17.5C19.25 18.8078 19.2097 19.544 18.5264 20.1004C18.1559 20.4022 17.5365 20.6967 16.4762 20.9113C15.4193 21.1252 13.9742 21.25 12 21.25C10.0258 21.25 8.58075 21.1252 7.5238 20.9113C6.46354 20.6967 5.84413 20.4022 5.4736 20.1004C4.79033 19.544 4.75001 18.8078 4.75001 17.5Z"
-                      fill="#3C50E0"
-                    />
-                  </svg>
-
-                  <div>
-                    <span className="block text-2xs text-dark-4 uppercase">
-                      account
-                    </span>
-                    <p className="font-medium text-custom-sm text-dark">
-                      Sign In
-                    </p>
+                {user ? (
+                  <div className="relative flex items-center" ref={dropdownRef}>
+                    <div
+                      className="flex items-center gap-3 cursor-pointer px-3 py-2 rounded-xl hover:bg-blue-50 transition group min-w-[170px]"
+                      onClick={() => setShowDropdown((v) => !v)}
+                    >
+                      <div className="w-11 h-11 bg-gradient-to-tr from-blue-500 to-blue-300 text-blue flex items-center justify-center rounded-full font-bold uppercase text-xl shadow border-2 border-white group-hover:border-blue-400 transition">
+                        {avatarPreview ? (
+                          <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover rounded-full" />
+                        ) : (
+                          (user?.user?.fullName || user?.user?.email || 'U')[0]
+                        )}
+                      </div>
+                      <div className="flex flex-col items-start justify-center min-w-0">
+                        <span className="text-xs text-gray-400 leading-none mb-0.5">Hi,</span>
+                        <span className="font-bold text-dark text-base leading-none mb-0.5 truncate max-w-[110px]">{user?.user?.fullName || user?.user?.email}</span>
+                        <span className="text-xs text-gray-400 leading-none truncate max-w-[110px]">{user?.user?.email}</span>
+                      </div>
+                      <svg className="ml-2 group-hover:rotate-180 transition-transform" width="20" height="20" fill="none"><path d="M7 8l3 3 3-3" stroke="#3C50E0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </div>
+                    {/* Dropdown */}
+                    {showDropdown && (
+                      <div className="absolute right-0 mt-1 min-w-[220px] w-64 bg-white border border-gray-100 rounded-2xl shadow-2xl animate-fadeIn z-50 overflow-hidden p-0.5 flex flex-col items-center" style={{top: 'calc(100% + 4px)'}}>
+                        <div className="flex flex-col items-center py-4 px-5 border-b border-gray-100 bg-gradient-to-tr from-blue-50 to-white w-full relative">
+                          <label className="cursor-pointer group">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handleAvatarChange}
+                            />
+                            <div className="w-14 h-14 bg-gradient-to-tr from-blue-500 to-blue-300 text-blue flex items-center justify-center rounded-full font-bold uppercase text-2xl shadow mb-2 border-4 border-white relative overflow-hidden">
+                              {avatarPreview ? (
+                                <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover rounded-full" />
+                              ) : (
+                                (user?.user?.fullName || user?.user?.email || 'U')[0]
+                              )}
+                              <span className="absolute bottom-0 left-0 w-full bg-black/40 text-xs text-center py-1 opacity-0 group-hover:opacity-100 transition">Update avatar</span>
+                            </div>
+                          </label>
+                          <span className="font-bold text-dark text-lg mb-0.5 truncate w-full text-center max-w-[160px]">{user?.user?.fullName || user?.user?.email}</span>
+                          <span className="text-xs text-gray-500 truncate w-full text-center max-w-[160px]">{user?.user?.email}</span>
+                        </div>
+                        <button
+                          onClick={handleSignOut}
+                          className="w-11/12 text-center py-3 text-base font-semibold text-red-500 border-2 border-red-400 bg-white transition rounded-xl mt-3 mb-2 mx-auto block shadow-sm"
+                        >
+                          Sign Out
+                        </button>
+                      </div>
+                    )}
+                    <style jsx global>{`
+                      @keyframes fadeIn {
+                        from { opacity: 0; transform: translateY(-10px); }
+                        to { opacity: 1; transform: translateY(0); }
+                      }
+                      .animate-fadeIn {
+                        animation: fadeIn 0.2s;
+                      }
+                    `}</style>
                   </div>
-                </Link>
+                ) : (
+                  <Link href="/signin" className="flex items-center gap-2.5">
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                        d="M12 1.25C9.37666 1.25 7.25001 3.37665 7.25001 6C7.25001 8.62335 9.37666 10.75 12 10.75C14.6234 10.75 16.75 8.62335 16.75 6C16.75 3.37665 14.6234 1.25 12 1.25ZM8.75001 6C8.75001 4.20507 10.2051 2.75 12 2.75C13.7949 2.75 15.25 4.20507 15.25 6C15.25 7.79493 13.7949 9.25 12 9.25C10.2051 9.25 8.75001 7.79493 8.75001 6Z"
+                        fill="#3C50E0"
+                      />
+                      <path
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                        d="M12 12.25C9.68646 12.25 7.55494 12.7759 5.97546 13.6643C4.4195 14.5396 3.25001 15.8661 3.25001 17.5L3.24995 17.602C3.24882 18.7638 3.2474 20.222 4.52642 21.2635C5.15589 21.7761 6.03649 22.1406 7.22622 22.3815C8.41927 22.6229 9.97424 22.75 12 22.75C14.0258 22.75 15.5808 22.6229 16.7738 22.3815C17.9635 22.1406 18.8441 21.7761 19.4736 21.2635C20.7526 20.222 20.7512 18.7638 20.7501 17.602L20.75 17.5C20.75 15.8661 19.5805 14.5396 18.0246 13.6643C16.4451 12.7759 14.3136 12.25 12 12.25ZM4.75001 17.5C4.75001 16.6487 5.37139 15.7251 6.71085 14.9717C8.02681 14.2315 9.89529 13.75 12 13.75C14.1047 13.75 15.9732 14.2315 17.2892 14.9717C18.6286 15.7251 19.25 16.6487 19.25 17.5C19.25 18.8078 19.2097 19.544 18.5264 20.1004C18.1559 20.4022 17.5365 20.6967 16.4762 20.9113C15.4193 21.1252 13.9742 21.25 12 21.25C10.0258 21.25 8.58075 21.1252 7.5238 20.9113C6.46354 20.6967 5.84413 20.4022 5.4736 20.1004C4.79033 19.544 4.75001 18.8078 4.75001 17.5Z"
+                        fill="#3C50E0"
+                      />
+                    </svg>
+                    <div>
+                      <span className="block text-2xs text-dark-4 uppercase">account</span>
+                      <p className="font-medium text-custom-sm text-dark">Sign In</p>
+                    </div>
+                  </Link>
+                )}
 
                 <button
                   onClick={handleOpenCartModal}
@@ -387,6 +534,13 @@ const Header = () => {
           </div>
         </div>
       </div>
+
+      {/* Thông báo cập nhật avatar */}
+      {avatarMessage && (
+        <div style={{ position: 'fixed', top: 80, right: 30, zIndex: 99999 }} className="bg-blue-500 text-white px-4 py-2 rounded shadow">
+          {avatarMessage}
+        </div>
+      )}
     </header>
   );
 };

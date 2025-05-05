@@ -7,7 +7,7 @@ import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import ApiSignIn from "../../api/login";
+import ApiSignIn from "../../api/login.ts";
 
 export default function SignInForm() {
 
@@ -30,8 +30,15 @@ export default function SignInForm() {
     try {
       const response = await ApiSignIn.login(formData.email, formData.password);
       if (response.data) {
-        localStorage.setItem('token', response.data.token);
-        router.push("/"); 
+        const role = response.data.user?.role;
+        if (role === "admin") {
+          localStorage.setItem('token', response.data.token);
+          window.location.href = "http://localhost:3000/";
+        } else if (role === "customer") {
+          window.location.href = "http://localhost:3001/";
+        } else {
+          router.push("/");
+        }
       }
     } catch (err: any) {
       setError(err.response?.data?.message || "An error occurred during login");

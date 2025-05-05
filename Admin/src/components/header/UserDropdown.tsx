@@ -70,8 +70,6 @@ export default function UserDropdown() {
     return null;
   }
 
-  console.log("111", userInfo)
-
   return (
     <div className="relative">
       <button
@@ -82,7 +80,7 @@ export default function UserDropdown() {
           <Image
             width={44}
             height={44}
-            src={userInfo.avatar || "/images/user/owner.jpg"}
+            src={userInfo?.user?.avatar ? userInfo?.user?.avatar : "/images/user/owner.jpg"}
             alt="User"
           />
         </span>
@@ -118,10 +116,10 @@ export default function UserDropdown() {
       >
         <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-            {userInfo.fullName}
+            {userInfo?.user?.fullName}
           </span>
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-            {userInfo.email}
+            {userInfo?.user?.email}
           </span>
         </div>
 

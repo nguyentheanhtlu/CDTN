@@ -1,8 +1,44 @@
+"use client";
+
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
+import { login } from "@/api/auth.api";
+import { useRouter } from "next/navigation";
 
 const Signin = () => {
+  const [form, setForm] = useState({
+    email: "",
+    password: ""
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (!form.email || !form.password) {
+      setError("Please fill all fields");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await login({ email: form.email, password: form.password });
+      // Giả sử API trả về token trong res.data.token
+      localStorage.setItem("token", res.data.token);
+      router.push("/");
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <Breadcrumb title={"Signin"} pages={["Signin"]} />
@@ -17,7 +53,7 @@ const Signin = () => {
             </div>
 
             <div>
-              <form>
+              <form onSubmit={handleSubmit}>
                 <div className="mb-5">
                   <label htmlFor="email" className="block mb-2.5">
                     Email
@@ -28,6 +64,8 @@ const Signin = () => {
                     name="email"
                     id="email"
                     placeholder="Enter your email"
+                    value={form.email}
+                    onChange={handleChange}
                     className="rounded-lg border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-3 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                   />
                 </div>
@@ -43,15 +81,20 @@ const Signin = () => {
                     id="password"
                     placeholder="Enter your password"
                     autoComplete="on"
+                    value={form.password}
+                    onChange={handleChange}
                     className="rounded-lg border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-3 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                   />
                 </div>
 
+                {error && <div className="text-red-500 text-sm mb-2 text-center">{error}</div>}
+
                 <button
                   type="submit"
                   className="w-full flex justify-center font-medium text-white bg-dark py-3 px-6 rounded-lg ease-out duration-200 hover:bg-blue mt-7.5"
+                  disabled={loading}
                 >
-                  Sign in to account
+                  {loading ? "Signing in..." : "Sign in to account"}
                 </button>
 
                 <a

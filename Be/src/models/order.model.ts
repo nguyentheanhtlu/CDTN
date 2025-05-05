@@ -20,6 +20,13 @@ export interface IOrder extends Document {
     paymentMethod: 'COD' | 'BANK_TRANSFER';
     paymentStatus: 'PENDING' | 'PAID' | 'FAILED';
     orderStatus: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+    appliedVoucher?: {
+        type: 'discount' | 'free_shipping';
+        value?: number;
+        discountAmount?: number;
+        message: string;
+    };
+    vnp_TxnRef?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -79,6 +86,14 @@ const orderSchema = new Schema<IOrder>({
         type: String,
         enum: ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'],
         default: 'PENDING'
+    },
+    appliedVoucher: {
+        type: Object,
+        default: null
+    },
+    vnp_TxnRef: {
+        type: String,
+        default: null
     }
 }, {
     timestamps: true
