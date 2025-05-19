@@ -18,7 +18,6 @@ interface ProductItemProps {
 }
 
 const ProductItem = ({ item, viewMode = 'grid' }: ProductItemProps) => {
-  console.log('ProductItem data:', item);
   const { openModal } = useModalContext();
   const dispatch = useDispatch<AppDispatch>();
 
