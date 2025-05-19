@@ -42,7 +42,7 @@ const SingleOrder: React.FC<SingleOrderProps> = ({ orderItem, smallView, onCance
       setIsCancelling(true);
       await onCancelOrder(orderItem._id);
     } catch (error) {
-      console.error('Error cancelling order:', error);
+      console.error('Lỗi khi hủy đơn hàng:', error);
     } finally {
       setIsCancelling(false);
     }
@@ -50,9 +50,9 @@ const SingleOrder: React.FC<SingleOrderProps> = ({ orderItem, smallView, onCance
 
   // Format date to readable string
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('vi-VN', {
       year: 'numeric',
-      month: 'short',
+      month: 'long',
       day: 'numeric'
     });
   };
@@ -75,27 +75,44 @@ const SingleOrder: React.FC<SingleOrderProps> = ({ orderItem, smallView, onCance
     }
   };
 
+  const getStatusText = (status: Order['orderStatus']) => {
+    switch (status.toLowerCase()) {
+      case 'delivered':
+        return 'Đã giao hàng';
+      case 'cancelled':
+        return 'Đã hủy';
+      case 'processing':
+        return 'Đang xử lý';
+      case 'shipped':
+        return 'Đang giao hàng';
+      case 'pending':
+        return 'Chờ xử lý';
+      default:
+        return status;
+    }
+  };
+
   return (
     <>
       <div className="order-card bg-white rounded-lg shadow-sm p-4">
         <div className="order-header flex justify-between items-center mb-4">
           <div className="order-info">
-            <h3 className="text-lg font-medium">Order #{orderItem._id}</h3>
-            <p className="text-gray-500">Placed on {formatDate(orderItem.createdAt)}</p>
+            <h3 className="text-lg font-medium">Đơn hàng #{orderItem._id}</h3>
+            <p className="text-gray-500">Đặt vào ngày {formatDate(orderItem.createdAt)}</p>
           </div>
           <div className="order-status">
             <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(orderItem.orderStatus)}`}>
-              {orderItem.orderStatus}
+              {getStatusText(orderItem.orderStatus)}
             </span>
           </div>
         </div>
 
         <div className="order-items space-y-4 mb-4">
-          {orderItem.items.map((item) => (
-            <div key={item.product._id} className="order-item flex items-center gap-4">
+          {orderItem.items.map((item, index) => (
+            <div key={`${orderItem._id}-${item.product._id}-${index}`} className="order-item flex items-center gap-4">
               <div className="item-image w-20 h-20 relative">
                 <Image
-                  src={item.product.images.previews[0] || '/images/product-placeholder.jpg'}
+                  src={item.product?.images[0] || '/images/product-placeholder.jpg'}
                   alt={item.product.name}
                   fill
                   className="object-contain"
@@ -103,8 +120,8 @@ const SingleOrder: React.FC<SingleOrderProps> = ({ orderItem, smallView, onCance
               </div>
               <div className="item-details flex-1">
                 <h4 className="font-medium">{item.product.name}</h4>
-                <p className="text-gray-500">Quantity: {item.quantity}</p>
-                <p className="text-gray-500">Price: ${item.price.toFixed(2)}</p>
+                <p className="text-gray-500">Số lượng: {item.quantity}</p>
+                <p className="text-gray-500">Giá: {item.price.toLocaleString('vi-VN')}đ</p>
               </div>
             </div>
           ))}
@@ -112,8 +129,8 @@ const SingleOrder: React.FC<SingleOrderProps> = ({ orderItem, smallView, onCance
 
         <div className="order-footer flex justify-between items-center">
           <div className="order-total">
-            <span className="text-gray-500">Total Amount:</span>
-            <strong className="ml-2 text-lg">${orderItem.totalAmount.toFixed(2)}</strong>
+            <span className="text-gray-500">Tổng tiền:</span>
+            <strong className="ml-2 text-lg">{orderItem.totalAmount.toLocaleString('vi-VN')}đ</strong>
           </div>
           <div className="order-actions flex gap-2">
             {orderItem.orderStatus === 'pending' && onCancelOrder && (

@@ -19,6 +19,21 @@ const Checkout = () => {
   const cartItems = useAppSelector(selectCartItems);
   const totalPrice = useAppSelector(selectTotalPrice);
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Thêm state để lưu thông tin đơn hàng
+  const [orderInfo, setOrderInfo] = useState({
+    useSavedAddress: false,
+    savedAddressIndex: 0,
+    shippingAddress: {
+      name: "",
+      phone: "",
+      addressLine: "",
+      ward: "",
+      district: "",
+      province: ""
+    },
+    paymentMethod: "COD"
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,16 +42,46 @@ const Checkout = () => {
       return;
     }
 
+    // Kiểm tra thông tin địa chỉ nếu không sử dụng địa chỉ đã lưu
+    if (!orderInfo.useSavedAddress) {
+      const { name, phone, addressLine, ward, district, province } = orderInfo.shippingAddress;
+      if (!name || !phone || !addressLine || !ward || !district || !province) {
+        toast.error('Vui lòng nhập đầy đủ thông tin địa chỉ giao hàng');
+        return;
+      }
+    }
+
     try {
       setIsProcessing(true);
-      await apiService.createOrder();
+      // Tạo payload dựa trên useSavedAddress
+      const payload = orderInfo.useSavedAddress 
+        ? {
+            useSavedAddress: true,
+            savedAddressIndex: orderInfo.savedAddressIndex,
+            paymentMethod: orderInfo.paymentMethod
+          }
+        : {
+            useSavedAddress: false,
+            shippingAddress: orderInfo.shippingAddress,
+            paymentMethod: orderInfo.paymentMethod
+          };
+
+      await apiService.createOrder(payload);
       toast.success('Đặt hàng thành công!');
-      router.push('/orders'); // Chuyển hướng đến trang đơn hàng
+      router.push('/orders');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Đặt hàng thất bại');
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  // Hàm cập nhật thông tin đơn hàng
+  const updateOrderInfo = (newInfo: Partial<typeof orderInfo>) => {
+    setOrderInfo(prev => ({
+      ...prev,
+      ...newInfo
+    }));
   };
 
   return (
@@ -51,9 +96,16 @@ const Checkout = () => {
                 {/* <!-- đăng nhập --> */}
 
                 {/* <!-- thông tin thanh toán --> */}
-                <Billing />
+                <Billing 
+                  orderInfo={orderInfo}
+                  updateOrderInfo={updateOrderInfo}
+                />
 
                 {/* <!-- địa chỉ giao hàng --> */}
+                <Shipping 
+                  orderInfo={orderInfo}
+                  updateOrderInfo={updateOrderInfo}
+                />
 
                 {/* <!-- ghi chú khác --> */}
                 <div className="bg-white shadow-1 rounded-[10px] p-4 sm:p-8.5 mt-7.5">
@@ -141,7 +193,10 @@ const Checkout = () => {
                 <ShippingMethod />
 
                 {/* <!-- phương thức thanh toán --> */}
-                <PaymentMethod />
+                <PaymentMethod 
+                  orderInfo={orderInfo}
+                  updateOrderInfo={updateOrderInfo}
+                />
 
                 {/* <!-- nút đặt hàng --> */}
                 <button

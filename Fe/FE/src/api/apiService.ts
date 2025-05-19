@@ -89,11 +89,30 @@ export interface Cart {
 
 export interface Order {
   _id: string;
+  user: string;
   items: CartItem[];
   totalAmount: number;
   status: string;
+  shippingAddress?: ShippingAddress;
+  paymentMethod: string;
   createdAt: string;
-  // Add other order fields as needed
+  updatedAt: string;
+}
+
+interface ShippingAddress {
+  name: string;
+  phone: string;
+  addressLine: string;
+  ward: string;
+  district: string;
+  province: string;
+}
+
+interface OrderPayload {
+  useSavedAddress: boolean;
+  savedAddressIndex?: number;
+  shippingAddress?: ShippingAddress;
+  paymentMethod: string;
 }
 
 // API Service
@@ -154,12 +173,14 @@ const apiService = {
     }
   },
 
-  createOrder: async (): Promise<Order> => {
+  createOrder: async (payload: OrderPayload) => {
     try {
-      const response = await axiosInstance.post('/orders');
+      const response = await axiosInstance.post('/orders', payload);
       return response.data;
     } catch (error) {
-      console.error('Error creating order:', error);
+      if (error instanceof AxiosError) {
+        throw new Error(error.response?.data?.message || 'Đặt hàng thất bại');
+      }
       throw error;
     }
   },

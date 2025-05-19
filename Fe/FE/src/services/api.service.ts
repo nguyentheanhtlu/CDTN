@@ -26,10 +26,8 @@ class ApiService {
     this.api.interceptors.request.use((config) => {
       if (typeof window !== 'undefined') {
         const token = localStorage.getItem('token');
-        console.log('Current token:', token);
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
-          console.log('Request headers:', config.headers);
         }
       }
       return config;
@@ -187,7 +185,7 @@ class ApiService {
   }
 
   async getMyOrders() {
-    const response = await this.api.get<Order[]>('/orders/user');
+    const response = await this.api.get<Order[]>('/orders/my-orders');
     return response.data;
   }
 
