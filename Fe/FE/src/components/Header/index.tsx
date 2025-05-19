@@ -5,8 +5,7 @@ import CustomSelect from "./CustomSelect";
 import { menuData } from "./menuData";
 import Dropdown from "./Dropdown";
 import { useAppSelector } from "@/redux/store";
-import { useSelector } from "react-redux";
-import { selectTotalPrice } from "@/redux/features/cart-slice";
+import { selectCart } from "@/redux/features/cart-slice";
 import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
 import Image from "next/image";
 import { getUserInfo, uploadAvatar } from "@/api/auth.api";
@@ -22,8 +21,9 @@ const Header = () => {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarMessage, setAvatarMessage] = useState<string | null>(null);
 
-  const product = useAppSelector((state) => state.cartReducer.items);
-  const totalPrice = useSelector(selectTotalPrice);
+  const cart = useAppSelector(selectCart);
+  const cartItems = cart?.items || [];
+  const totalAmount = cart?.totalAmount || 0;
 
   const handleOpenCartModal = () => {
     openCartModal();
@@ -108,14 +108,14 @@ const Header = () => {
   };
 
   const options = [
-    { label: "All Categories", value: "0" },
-    { label: "Desktop", value: "1" },
+    { label: "Tất cả danh mục", value: "0" },
+    { label: "Máy tính để bàn", value: "1" },
     { label: "Laptop", value: "2" },
-    { label: "Monitor", value: "3" },
-    { label: "Phone", value: "4" },
-    { label: "Watch", value: "5" },
-    { label: "Mouse", value: "6" },
-    { label: "Tablet", value: "7" },
+    { label: "Màn hình", value: "3" },
+    { label: "Điện thoại", value: "4" },
+    { label: "Đồng hồ", value: "5" },
+    { label: "Chuột", value: "6" },
+    { label: "Máy tính bảng", value: "7" },
   ];
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -174,7 +174,7 @@ const Header = () => {
                       type="search"
                       name="search"
                       id="search"
-                      placeholder="I am shopping for..."
+                      placeholder="Tôi đang tìm kiếm..."
                       autoComplete="off"
                       className="custom-search w-full rounded-r-[5px] bg-gray-1 !border-l-0 border border-gray-3 py-2.5 pl-4 pr-10 outline-none ease-in duration-200"
                     />
@@ -234,7 +234,7 @@ const Header = () => {
 
               <div>
                 <span className="block text-2xs text-dark-4 uppercase">
-                  24/7 SUPPORT
+                  HỖ TRỢ 24/7
                 </span>
                 <p className="font-medium text-custom-sm text-dark">
                   (+84) 981-632302
@@ -331,8 +331,8 @@ const Header = () => {
                       />
                     </svg>
                     <div>
-                      <span className="block text-2xs text-dark-4 uppercase">account</span>
-                      <p className="font-medium text-custom-sm text-dark">Sign In</p>
+                      <span className="block text-2xs text-dark-4 uppercase">tài khoản</span>
+                      <p className="font-medium text-custom-sm text-dark">Đăng nhập</p>
                     </div>
                   </Link>
                 )}
@@ -374,16 +374,16 @@ const Header = () => {
                     </svg>
 
                     <span className="flex items-center justify-center font-medium text-2xs absolute -right-2 -top-2.5 bg-blue w-4.5 h-4.5 rounded-full text-white">
-                      {product.length}
+                      {cartItems.length}
                     </span>
                   </span>
 
                   <div>
                     <span className="block text-2xs text-dark-4 uppercase">
-                      cart
+                      giỏ hàng
                     </span>
                     <p className="font-medium text-custom-sm text-dark">
-                      ${totalPrice}
+                      ${totalAmount}
                     </p>
                   </div>
                 </button>
@@ -503,7 +503,7 @@ const Header = () => {
                         fill=""
                       />
                     </svg>
-                    Recently Viewed
+                    Đã xem gần đây
                   </a>
                 </li>
 
@@ -525,7 +525,7 @@ const Header = () => {
                         fill=""
                       />
                     </svg>
-                    Wishlist
+                    Danh sách yêu thích
                   </Link>
                 </li>
               </ul>

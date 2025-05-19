@@ -13,11 +13,15 @@ export interface IOrder extends Document {
     items: OrderItem[];
     totalAmount: number;
     shippingAddress: {
-        address: string;
-        city: string;
+        name: string;
         phone: string;
+        addressLine: string;
+        ward: string;
+        district: string;
+        province: string;
+        isNewAddress?: boolean;
     };
-    paymentMethod: 'COD' | 'BANK_TRANSFER';
+    paymentMethod: 'COD' | 'BANK_TRANSFER' | 'VNPay' | 'MoMo';
     paymentStatus: 'PENDING' | 'PAID' | 'FAILED';
     orderStatus: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
     appliedVoucher?: {
@@ -59,22 +63,17 @@ const orderSchema = new Schema<IOrder>({
         required: true
     },
     shippingAddress: {
-        address: {
-            type: String,
-            required: true
-        },
-        city: {
-            type: String,
-            required: true
-        },
-        phone: {
-            type: String,
-            required: true
-        }
+        name: { type: String, required: true },
+        phone: { type: String, required: true },
+        addressLine: { type: String, required: true },
+        ward: { type: String, required: true },
+        district: { type: String, required: true },
+        province: { type: String, required: true },
+        isNewAddress: { type: Boolean, default: false }
     },
     paymentMethod: {
         type: String,
-        enum: ['COD', 'BANK_TRANSFER'],
+        enum: ['COD', 'BANK_TRANSFER', 'VNPay', 'MoMo'],
         required: true
     },
     paymentStatus: {

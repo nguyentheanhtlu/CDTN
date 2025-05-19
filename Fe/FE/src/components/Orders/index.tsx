@@ -1,69 +1,138 @@
-import React, { useEffect, useState } from "react";
-import SingleOrder from "./SingleOrder";
-import ordersData from "./ordersData";
+"use client";
+import { useEffect, useState } from 'react';
+import { apiService } from '@/services/api.service';
+import { Order } from '@/types/order';
+import Link from 'next/link';
+import toast from 'react-hot-toast';
+import SingleOrder from './SingleOrder';
 
 const Orders = () => {
-  const [orders, setOrders] = useState<any>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchOrders = async () => {
+    try {
+      console.log('Fetching orders...');
+      const response = await apiService.getMyOrders();
+      console.log('Orders response:', response);
+      setOrders(response);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+      setError('Không thể tải danh sách đơn hàng');
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetch(`/api/order`)
-      .then((res) => res.json())
-      .then((data) => {
-        setOrders(data.orders);
-      })
-      .catch((err) => {
-        console.log(err.message);
-      });
+    console.log('Orders component mounted');
+    fetchOrders();
   }, []);
 
-  return (
-    <>
-      <div className="w-full overflow-x-auto">
-        <div className="min-w-[770px]">
-          {/* <!-- order item --> */}
-          {ordersData.length > 0 && (
-            <div className="items-center justify-between py-4.5 px-7.5 hidden md:flex ">
-              <div className="min-w-[111px]">
-                <p className="text-custom-sm text-dark">Order</p>
-              </div>
-              <div className="min-w-[175px]">
-                <p className="text-custom-sm text-dark">Date</p>
-              </div>
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('vi-VN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
 
-              <div className="min-w-[128px]">
-                <p className="text-custom-sm text-dark">Status</p>
-              </div>
+  const getStatusClass = (status: Order['orderStatus']) => {
+    switch (status) {
+      case 'pending':
+        return 'status-pending';
+      case 'processing':
+        return 'status-processing';
+      case 'shipped':
+        return 'status-shipped';
+      case 'delivered':
+        return 'status-delivered';
+      case 'cancelled':
+        return 'status-cancelled';
+      default:
+        return '';
+    }
+  };
 
-              <div className="min-w-[213px]">
-                <p className="text-custom-sm text-dark">Title</p>
-              </div>
+  const handleCancelOrder = async (orderId: string) => {
+    try {
+      await apiService.updateOrderStatus(orderId, { orderStatus: 'cancelled' });
+      toast.success('Hủy đơn hàng thành công');
+      // Refresh orders list
+      fetchOrders();
+    } catch (err) {
+      toast.error('Không thể hủy đơn hàng');
+    }
+  };
 
-              <div className="min-w-[113px]">
-                <p className="text-custom-sm text-dark">Total</p>
-              </div>
+  if (loading) {
+    return (
+      <div className="orders-section">
+        <div className="container">
+          <div className="row">
+            <div className="col-12">
+              <h2>Đang tải đơn hàng...</h2>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-              <div className="min-w-[113px]">
-                <p className="text-custom-sm text-dark">Action</p>
+  if (error) {
+    return (
+      <div className="orders-section">
+        <div className="container">
+          <div className="row">
+            <div className="col-12">
+              <div className="text-red-500">{error}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!orders.length) {
+    return (
+      <div className="orders-section">
+        <div className="container">
+          <div className="row">
+            <div className="col-12">
+              <div className="text-center">
+                <h2>Không tìm thấy đơn hàng nào</h2>
+                <Link href="/shop" className="btn-primary mt-4">
+                  Tiếp tục mua sắm
+                </Link>
               </div>
             </div>
-          )}
-          {ordersData.length > 0 ? (
-            ordersData.map((orderItem, key) => (
-              <SingleOrder key={key} orderItem={orderItem} smallView={false} />
-            ))
-          ) : (
-            <p className="py-9.5 px-4 sm:px-7.5 xl:px-10">
-              You don&apos;t have any orders!
-            </p>
-          )}
+          </div>
         </div>
-
-        {ordersData.length > 0 &&
-          ordersData.map((orderItem, key) => (
-            <SingleOrder key={key} orderItem={orderItem} smallView={true} />
-          ))}
       </div>
-    </>
+    );
+  }
+
+  return (
+    <div className="orders-section">
+      <div className="container">
+        <div className="row">
+          <div className="col-12">
+            <h2 className="mb-4">Đơn hàng của tôi</h2>
+            <div className="grid gap-4">
+              {orders.map((order) => (
+                <SingleOrder 
+                  key={order._id} 
+                  orderItem={order} 
+                  smallView={false}
+                  onCancelOrder={handleCancelOrder}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

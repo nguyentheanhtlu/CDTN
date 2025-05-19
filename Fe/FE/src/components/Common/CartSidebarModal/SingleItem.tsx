@@ -1,33 +1,61 @@
 import React from "react";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/redux/store";
+import { useAppDispatch } from "@/redux/store";
+import { removeItemFromCart } from "@/redux/features/cart-slice";
 import Image from "next/image";
+import toast from "react-hot-toast";
 
-const SingleItem = ({ item, removeItemFromCart }) => {
-  const dispatch = useDispatch<AppDispatch>();
-
-  const handleRemoveFromCart = () => {
-    dispatch(removeItemFromCart(item.id));
+interface CartItem {
+  _id: string;
+  product: {
+    _id: string;
+    name: string;
+    price: number;
+    images: string[];
   };
+  quantity: number;
+  price: number;
+}
+
+const SingleItem = ({ item }: { item: CartItem }) => {
+  const dispatch = useAppDispatch();
+
+  const handleRemoveFromCart = async () => {
+    try {
+      await dispatch(removeItemFromCart(item.product._id)).unwrap();
+      toast.success('Đã xóa sản phẩm khỏi giỏ hàng');
+    } catch (error) {
+      toast.error('Không thể xóa sản phẩm khỏi giỏ hàng');
+    }
+  };
+
+  // Kiểm tra và lấy ảnh sản phẩm
+  const productImage = item.product?.images?.[0] || '/images/placeholder.png';
 
   return (
     <div className="flex items-center justify-between gap-5">
       <div className="w-full flex items-center gap-6">
         <div className="flex items-center justify-center rounded-[10px] bg-gray-3 max-w-[90px] w-full h-22.5">
-          <Image src={item.imgs?.thumbnails[0]} alt="product" width={100} height={100} />
+          <Image 
+            src={productImage}
+            alt={item.product?.name || 'Product image'} 
+            width={100} 
+            height={100}
+            className="object-contain"
+          />
         </div>
 
         <div>
           <h3 className="font-medium text-dark mb-1 ease-out duration-200 hover:text-blue">
-            <a href="#"> {item.title} </a>
+            <a href="#"> {item.product?.name || 'Product'} </a>
           </h3>
-          <p className="text-custom-sm">Price: ${item.discountedPrice}</p>
+          <p className="text-custom-sm">Giá: ${item.price}</p>
+          <p className="text-custom-sm">Số lượng: {item.quantity}</p>
         </div>
       </div>
 
       <button
         onClick={handleRemoveFromCart}
-        aria-label="button for remove product from cart"
+        aria-label="nút xóa sản phẩm khỏi giỏ hàng"
         className="flex items-center justify-center rounded-lg max-w-[38px] w-full h-9.5 bg-gray-2 border border-gray-3 text-dark ease-out duration-200 hover:bg-red-light-6 hover:border-red-light-4 hover:text-red"
       >
         <svg

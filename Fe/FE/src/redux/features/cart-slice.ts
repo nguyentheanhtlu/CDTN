@@ -1,82 +1,115 @@
-import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
+import apiService from "@/api/apiService";
+
+interface CartItem {
+  _id: string;
+  product: {
+    _id: string;
+    name: string;
+    price: number;
+    images: string[];
+  };
+  quantity: number;
+  price: number;
+}
+
+interface Cart {
+  _id: string;
+  user: string;
+  items: CartItem[];
+  totalAmount: number;
+  createdAt: string;
+  updatedAt: string;
+}
 
 type InitialState = {
-  items: CartItem[];
-};
-
-type CartItem = {
-  id: number;
-  title: string;
-  price: number;
-  discountedPrice: number;
-  quantity: number;
-  imgs?: {
-    thumbnails: string[];
-    previews: string[];
-  };
+  cart: Cart | null;
+  loading: boolean;
+  error: string | null;
 };
 
 const initialState: InitialState = {
-  items: [],
+  cart: null,
+  loading: false,
+  error: null,
 };
 
 export const cart = createSlice({
   name: "cart",
   initialState,
   reducers: {
-    addItemToCart: (state, action: PayloadAction<CartItem>) => {
-      const { id, title, price, quantity, discountedPrice, imgs } =
-        action.payload;
-      const existingItem = state.items.find((item) => item.id === id);
-
-      if (existingItem) {
-        existingItem.quantity += quantity;
-      } else {
-        state.items.push({
-          id,
-          title,
-          price,
-          quantity,
-          discountedPrice,
-          imgs,
-        });
-      }
+    setCart: (state, action: PayloadAction<Cart>) => {
+      state.cart = action.payload;
     },
-    removeItemFromCart: (state, action: PayloadAction<number>) => {
-      const itemId = action.payload;
-      state.items = state.items.filter((item) => item.id !== itemId);
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.loading = action.payload;
     },
-    updateCartItemQuantity: (
-      state,
-      action: PayloadAction<{ id: number; quantity: number }>
-    ) => {
-      const { id, quantity } = action.payload;
-      const existingItem = state.items.find((item) => item.id === id);
-
-      if (existingItem) {
-        existingItem.quantity = quantity;
-      }
+    setError: (state, action: PayloadAction<string | null>) => {
+      state.error = action.payload;
     },
-
-    removeAllItemsFromCart: (state) => {
-      state.items = [];
-    },
+    clearCart: (state) => {
+      state.cart = null;
+    }
   },
 });
 
-export const selectCartItems = (state: RootState) => state.cartReducer.items;
+// Selectors
+export const selectCart = (state: RootState) => state.cartReducer.cart;
+export const selectCartLoading = (state: RootState) => state.cartReducer.loading;
+export const selectCartError = (state: RootState) => state.cartReducer.error;
 
-export const selectTotalPrice = createSelector([selectCartItems], (items) => {
-  return items.reduce((total, item) => {
-    return total + item.discountedPrice * item.quantity;
-  }, 0);
-});
+// Thêm các selector mới
+export const selectCartItems = (state: RootState) => state.cartReducer.cart?.items || [];
+export const selectTotalPrice = (state: RootState) => state.cartReducer.cart?.totalAmount || 0;
 
-export const {
-  addItemToCart,
-  removeItemFromCart,
-  updateCartItemQuantity,
-  removeAllItemsFromCart,
-} = cart.actions;
+// Thunks
+export const fetchCart = () => async (dispatch: any) => {
+  try {
+    dispatch(setLoading(true));
+    const response = await apiService.getCart();
+    dispatch(setCart(response));
+    dispatch(setError(null));
+  } catch (error) {
+    dispatch(setError(error instanceof Error ? error.message : 'Failed to fetch cart'));
+    dispatch(clearCart());
+    throw error;
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
+export const addToCart = (productId: string, quantity: number = 1) => async (dispatch: any) => {
+  try {
+    dispatch(setLoading(true));
+    await apiService.addToCart(productId, quantity);
+    // After adding, fetch the updated cart
+    const cartResponse = await apiService.getCart();
+    dispatch(setCart(cartResponse));
+    dispatch(setError(null));
+  } catch (error) {
+    console.error('Error adding item to cart:', error);
+    dispatch(setError(error instanceof Error ? error.message : 'Failed to add item to cart'));
+    throw error;
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
+export const removeItemFromCart = (itemId: string) => async (dispatch: any) => {
+  try {
+    dispatch(setLoading(true));
+    const updatedCart = await apiService.removeFromCart(itemId);
+    dispatch(setCart(updatedCart));
+    dispatch(setError(null));
+  } catch (error) {
+    console.error('Error removing item from cart:', error);
+    dispatch(setError(error instanceof Error ? error.message : 'Failed to remove item from cart'));
+    throw error;
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
+export const { setCart, setLoading, setError, clearCart } = cart.actions;
 export default cart.reducer;

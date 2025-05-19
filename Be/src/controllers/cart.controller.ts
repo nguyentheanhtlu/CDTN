@@ -149,10 +149,15 @@ export const removeFromCart = async (req: AuthRequest, res: Response) => {
             return res.status(404).json({ message: 'Không tìm thấy giỏ hàng' });
         }
 
-        // Xóa sản phẩm
-        cart.items = cart.items.filter(
-            item => item.product !== productId
-        );
+        // Tìm index của item cần xóa
+        const itemIndex = cart.items.findIndex(item => item.product == productId);
+        
+        if (itemIndex === -1) {
+            return res.status(404).json({ message: 'Không tìm thấy sản phẩm trong giỏ hàng' });
+        }
+
+        // Xóa item khỏi mảng items
+        cart.items.splice(itemIndex, 1);
 
         // Tính lại tổng tiền
         cart.totalAmount = cart.items.reduce(
@@ -161,12 +166,16 @@ export const removeFromCart = async (req: AuthRequest, res: Response) => {
         );
 
         await cart.save();
+        
+        // Populate lại thông tin sản phẩm trước khi trả về
+        await cart.populate('items.product', 'name price images');
 
         res.json({
             message: 'Xóa sản phẩm khỏi giỏ hàng thành công',
             cart
         });
     } catch (error) {
+        console.error('Error in removeFromCart:', error);
         res.status(500).json({ message: 'Lỗi khi xóa sản phẩm khỏi giỏ hàng', error });
     }
 }; 

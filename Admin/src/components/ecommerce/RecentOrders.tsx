@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -25,97 +25,211 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
+import toast from "react-hot-toast";
+import { Loader2 } from "lucide-react";
 
-interface Order {
-  id: number;
+interface Product {
+  _id: string;
   name: string;
-  customer: string;
-  email: string;
-  products: {
-    name: string;
-    quantity: number;
-    price: string;
-    image: string;
-  }[];
-  total: string;
-  date: string;
-  status: "Delivered" | "Pending" | "Canceled";
+  price: number;
+  images: string[];
 }
 
-const initialOrders: Order[] = [
-  {
-    id: 1,
-    name: "Order #12345",
-    customer: "John Doe",
-    email: "john@example.com",
-    products: [
-      {
-        name: "MacBook Pro 13\"",
-        quantity: 1,
-        price: "$2399.00",
-        image: "/images/product/product-01.jpg",
-      }
-    ],
-    total: "$2399.00",
-    date: "2024-03-15",
-    status: "Delivered",
-  },
-  {
-    id: 2,
-    name: "Order #12346",
-    customer: "Jane Smith",
-    email: "jane@example.com",
-    products: [
-      {
-        name: "Apple Watch Ultra",
-        quantity: 1,
-        price: "$879.00",
-        image: "/images/product/product-02.jpg",
-      }
-    ],
-    total: "$879.00",
-    date: "2024-03-16",
-    status: "Pending",
-  },
-  {
-    id: 3,
-    name: "Order #12347",
-    customer: "Mike Johnson",
-    email: "mike@example.com",
-    products: [
-      {
-        name: "iPhone 15 Pro Max",
-        quantity: 1,
-        price: "$1869.00",
-        image: "/images/product/product-03.jpg",
-      }
-    ],
-    total: "$1869.00",
-    date: "2024-03-16",
-    status: "Canceled",
-  },
-];
+interface OrderItem {
+  product: Product;
+  quantity: number;
+  price: number;
+  _id: string;
+}
+
+interface ShippingAddress {
+  address: string;
+  city: string;
+  phone: string;
+}
+
+interface User {
+  _id: string;
+  email: string;
+  fullName: string;
+}
+
+interface Order {
+  _id: string;
+  shippingAddress: ShippingAddress;
+  user: User;
+  items: OrderItem[];
+  totalAmount: number;
+  paymentMethod: string;
+  paymentStatus: "PENDING" | "COMPLETED" | "FAILED";
+  orderStatus: "PENDING" | "PROCESSING" | "DELIVERED" | "CANCELED";
+  appliedVoucher: string | null;
+  vnp_TxnRef: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export default function RecentOrders() {
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const [totalOrders, setTotalOrders] = useState(0);
 
-  const handleStatusUpdate = (orderId: number, newStatus: Order["status"]) => {
-    setOrders(orders.map(order => 
-      order.id === orderId ? { ...order, status: newStatus } : order
-    ));
-    setStatusDialogOpen(false);
+  // Calculate pagination
+  const totalPages = Math.ceil(totalOrders / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const currentOrders = orders.slice(startIndex, endIndex);
+
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{
+    orderId: string;
+    newStatus: Order["orderStatus"];
+  } | null>(null);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setIsLoading(true);
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        const response = await fetch('http://localhost:5000/api/orders', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Unauthorized: Please login again');
+          }
+          throw new Error('Failed to fetch orders');
+        }
+
+        const data = await response.json();
+        setOrders(data.orders);
+        setTotalOrders(data.orders.length);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred while fetching orders');
+        if (err instanceof Error && err.message === 'No authentication token found') {
+          console.log('Please login to view orders');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
-  const getStatusColor = (status: Order["status"]) => {
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
+
+  const handleStatusUpdate = async (orderId: string, newStatus: Order["orderStatus"]) => {
+    // Show confirmation dialog first
+    setPendingStatusUpdate({ orderId, newStatus });
+    setConfirmDialogOpen(true);
+  };
+
+  const confirmStatusUpdate = async () => {
+    if (!pendingStatusUpdate) return;
+
+    const { orderId, newStatus } = pendingStatusUpdate;
+    setIsUpdating(true);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`http://localhost:5000/api/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ orderStatus: newStatus })
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Unauthorized: Please login again');
+        }
+        throw new Error('Failed to update order status');
+      }
+
+      // Update local state after successful API call
+      setOrders(orders.map(order => 
+        order._id === orderId ? { ...order, orderStatus: newStatus } : order
+      ));
+      
+      // Show success toast
+      toast.success('Order status updated successfully', {
+        duration: 3000,
+        position: 'top-right',
+        style: {
+          background: '#333',
+          color: '#fff',
+        },
+      });
+
+      // Close dialogs
+      setStatusDialogOpen(false);
+      setConfirmDialogOpen(false);
+      setPendingStatusUpdate(null);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update order status';
+      setError(errorMessage);
+      toast.error(errorMessage, {
+        duration: 4000,
+        position: 'top-right',
+        style: {
+          background: '#333',
+          color: '#fff',
+        },
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const getStatusColor = (status: Order["orderStatus"]) => {
     switch (status) {
-      case "Delivered":
+      case "DELIVERED":
         return "success";
-      case "Pending":
+      case "PENDING":
         return "warning";
-      case "Canceled":
+      case "PROCESSING":
+        return "info";
+      case "CANCELED":
         return "error";
       default:
         return "success";
@@ -135,96 +249,224 @@ export default function RecentOrders() {
         </div>
       </div>
 
-      <div className="flex flex-col">
-        <Table>
-          <TableHeader className="bg-gray-50 dark:bg-boxdark-2 border-t border-stroke dark:border-strokedark">
-            <TableRow>
-              <TableCell className="py-4 px-4 font-medium text-black dark:text-white">
-                Order Info
-              </TableCell>
-              <TableCell className="py-4 px-4 font-medium text-black dark:text-white">
-                Customer
-              </TableCell>
-              <TableCell className="py-4 px-4 font-medium text-black dark:text-white">
-                Total
-              </TableCell>
-              <TableCell className="py-4 px-4 font-medium text-black dark:text-white">
-                Status
-              </TableCell>
-              <TableCell className="py-4 px-4 font-medium text-black dark:text-white">
-                Actions
-              </TableCell>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {orders.map((order) => (
-              <TableRow key={order.id} className="border-b border-stroke dark:border-strokedark last:border-none hover:bg-gray-50 dark:hover:bg-boxdark-2">
-                <TableCell className="py-5 px-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0">
-                      <Image
-                        src={order.products[0].image}
-                        alt={order.products[0].name}
-                        width={48}
-                        height={48}
-                        className="rounded-lg border border-stroke dark:border-strokedark"
-                      />
-                    </div>
-                    <div>
-                      <h5 className="font-medium text-black dark:text-white">
-                        {order.name}
-                      </h5>
-                      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{order.date}</p>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="py-5 px-4">
-                  <div>
-                    <h5 className="font-medium text-black dark:text-white">
-                      {order.customer}
-                    </h5>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{order.email}</p>
-                  </div>
-                </TableCell>
-                <TableCell className="py-5 px-4">
-                  <p className="text-black dark:text-white font-medium">{order.total}</p>
-                </TableCell>
-                <TableCell className="py-5 px-4">
-                  <Badge color={getStatusColor(order.status)}>
-                    {order.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="py-5 px-4">
-                  <div className="flex gap-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedOrder(order);
-                        setDetailsDialogOpen(true);
-                      }}
-                      className="border-primary text-primary hover:bg-primary hover:text-white dark:border-primary dark:text-primary dark:hover:bg-primary"
-                    >
-                      View Details
-                    </Button>
-                    <Button
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        setSelectedOrder(order);
-                        setStatusDialogOpen(true);
-                      }}
-                      className="border-primary text-primary hover:bg-primary hover:text-white dark:border-primary dark:text-primary dark:hover:bg-primary"
-                    >
-                      Update Status
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      {isLoading ? (
+        <div className="flex justify-center items-center py-8">
+          <p className="text-gray-600 dark:text-gray-400">Loading orders...</p>
+        </div>
+      ) : error ? (
+        <div className="flex justify-center items-center py-8">
+          <p className="text-red-500">{error}</p>
+        </div>
+      ) : orders.length === 0 ? (
+        <div className="flex justify-center items-center py-8">
+          <p className="text-gray-600 dark:text-gray-400">No orders found</p>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-col">
+            <Table>
+              <TableHeader className="bg-gray-50 dark:bg-boxdark-2 border-t border-stroke dark:border-strokedark">
+                <TableRow>
+                  <TableCell className="py-4 px-4 font-medium text-black dark:text-white">
+                    Order Info
+                  </TableCell>
+                  <TableCell className="py-4 px-4 font-medium text-black dark:text-white">
+                    Customer
+                  </TableCell>
+                  <TableCell className="py-4 px-4 font-medium text-black dark:text-white">
+                    Total
+                  </TableCell>
+                  <TableCell className="py-4 px-4 font-medium text-black dark:text-white">
+                    Status
+                  </TableCell>
+                  <TableCell className="py-4 px-4 font-medium text-black dark:text-white">
+                    Actions
+                  </TableCell>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {currentOrders.map((order) => (
+                  <TableRow key={order._id} className="border-b border-stroke dark:border-strokedark last:border-none hover:bg-gray-50 dark:hover:bg-boxdark-2">
+                    <TableCell className="py-5 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0">
+                          <Image
+                            src={order.items[0].product.images[0]}
+                            alt={order.items[0].product.name}
+                            width={48}
+                            height={48}
+                            className="rounded-lg border border-stroke dark:border-strokedark"
+                          />
+                        </div>
+                        <div>
+                          <h5 className="font-medium text-black dark:text-white">
+                            Order #{order._id.slice(-6)}
+                          </h5>
+                          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                            {new Date(order.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-5 px-4">
+                      <div>
+                        <h5 className="font-medium text-black dark:text-white">
+                          {order.user.fullName}
+                        </h5>
+                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{order.user.email}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-5 px-4">
+                      <p className="text-black dark:text-white font-medium">${order.totalAmount.toFixed(2)}</p>
+                    </TableCell>
+                    <TableCell className="py-5 px-4">
+                      <Badge color={getStatusColor(order.orderStatus)}>
+                        {order.orderStatus}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="py-5 px-4">
+                      <div className="flex gap-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedOrder(order);
+                            setDetailsDialogOpen(true);
+                          }}
+                          className="border-primary text-primary  dark:border-primary dark:text-primary dark:hover:bg-primary"
+                        >
+                          View Details
+                        </Button>
+                        <Button
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedOrder(order);
+                            setStatusDialogOpen(true);
+                          }}
+                          className="border-primary text-primary  dark:border-primary dark:text-primary dark:hover:bg-primary"
+                        >
+                          Update Status
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-between border-t border-stroke dark:border-strokedark px-4 py-3 sm:px-6 mt-4">
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-gray-700 dark:text-gray-400">
+                Show
+                <select
+                  className="mx-2 rounded border border-stroke dark:border-strokedark bg-transparent px-2 py-1 text-gray-700 dark:text-gray-400 hover:border-primary dark:hover:border-primary focus:border-primary dark:focus:border-primary focus:outline-none"
+                  value={pageSize}
+                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                entries
+              </p>
+              <p className="text-sm text-gray-700 dark:text-gray-400">
+                Showing {startIndex + 1} to {Math.min(endIndex, totalOrders)} of {totalOrders} entries
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(1)}
+                disabled={currentPage === 1}
+                className="border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronsLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(page => {
+                    return (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    );
+                  })
+                  .map((page, index, array) => {
+                    if (index > 0 && page - array[index - 1] > 1) {
+                      return (
+                        <React.Fragment key={`ellipsis-${page}`}>
+                          <span className="px-2 text-gray-600 dark:text-gray-400">...</span>
+                          <Button
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => handlePageChange(page)}
+                            className={`${
+                              currentPage === page 
+                                ? "bg-primary text-white hover:bg-primary/90" 
+                                : "border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white"
+                            }`}
+                          >
+                            {page}
+                          </Button>
+                        </React.Fragment>
+                      );
+                    }
+                    return (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(page)}
+                        className={`${
+                          currentPage === page 
+                            ? "bg-primary text-white hover:bg-primary/90" 
+                            : "border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white"
+                        }`}
+                      >
+                        {page}
+                      </Button>
+                    );
+                  })}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(totalPages)}
+                disabled={currentPage === totalPages}
+                className="border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronsRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
 
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
         <DialogContent className="bg-white dark:bg-boxdark">
@@ -236,11 +478,17 @@ export default function RecentOrders() {
               <div>
                 <h3 className="text-lg font-semibold text-black dark:text-white mb-3">Order Information</h3>
                 <div className="space-y-2 text-gray-600 dark:text-gray-400">
-                  <p>Order ID: <span className="text-black dark:text-white">{selectedOrder.name}</span></p>
-                  <p>Date: <span className="text-black dark:text-white">{selectedOrder.date}</span></p>
-                  <p>Status: 
-                    <Badge color={getStatusColor(selectedOrder.status)}>
-                      {selectedOrder.status}
+                  <p>Order ID: <span className="text-black dark:text-white">#{selectedOrder._id.slice(-6)}</span></p>
+                  <p>Date: <span className="text-black dark:text-white">{new Date(selectedOrder.createdAt).toLocaleString()}</span></p>
+                  <p>Payment Method: <span className="text-black dark:text-white">{selectedOrder.paymentMethod}</span></p>
+                  <p>Payment Status: 
+                    <Badge color={selectedOrder.paymentStatus === "COMPLETED" ? "success" : "warning"}>
+                      {selectedOrder.paymentStatus}
+                    </Badge>
+                  </p>
+                  <p>Order Status: 
+                    <Badge color={getStatusColor(selectedOrder.orderStatus)}>
+                      {selectedOrder.orderStatus}
                     </Badge>
                   </p>
                 </div>
@@ -248,26 +496,28 @@ export default function RecentOrders() {
               <div>
                 <h3 className="text-lg font-semibold text-black dark:text-white mb-3">Customer Information</h3>
                 <div className="space-y-2 text-gray-600 dark:text-gray-400">
-                  <p>Name: <span className="text-black dark:text-white">{selectedOrder.customer}</span></p>
-                  <p>Email: <span className="text-black dark:text-white">{selectedOrder.email}</span></p>
+                  <p>Name: <span className="text-black dark:text-white">{selectedOrder.user.fullName}</span></p>
+                  <p>Email: <span className="text-black dark:text-white">{selectedOrder.user.email}</span></p>
+                  <p>Phone: <span className="text-black dark:text-white">{selectedOrder.shippingAddress.phone}</span></p>
+                  <p>Address: <span className="text-black dark:text-white">{selectedOrder.shippingAddress.address}, {selectedOrder.shippingAddress.city}</span></p>
                 </div>
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-black dark:text-white mb-3">Products</h3>
                 <div className="space-y-4">
-                  {selectedOrder.products.map((product, index) => (
-                    <div key={index} className="flex items-center gap-4 p-3 rounded-lg border border-stroke dark:border-strokedark">
+                  {selectedOrder.items.map((item) => (
+                    <div key={item._id} className="flex items-center gap-4 p-3 rounded-lg border border-stroke dark:border-strokedark">
                       <Image
-                        src={product.image}
-                        alt={product.name}
+                        src={item.product.images[0]}
+                        alt={item.product.name}
                         width={60}
                         height={60}
                         className="rounded-lg border border-stroke dark:border-strokedark"
                       />
                       <div>
-                        <p className="font-medium text-black dark:text-white">{product.name}</p>
+                        <p className="font-medium text-black dark:text-white">{item.product.name}</p>
                         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                          {product.quantity} x {product.price}
+                          {item.quantity} x ${item.price.toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -276,7 +526,7 @@ export default function RecentOrders() {
               </div>
               <div className="flex justify-between items-center pt-4 border-t border-stroke dark:border-strokedark">
                 <h3 className="text-lg font-semibold text-black dark:text-white">Total Amount</h3>
-                <p className="text-xl font-semibold text-black dark:text-white">{selectedOrder.total}</p>
+                <p className="text-xl font-semibold text-black dark:text-white">${selectedOrder.totalAmount.toFixed(2)}</p>
               </div>
             </div>
           )}
@@ -284,7 +534,7 @@ export default function RecentOrders() {
             <Button 
               variant="outline" 
               onClick={() => setDetailsDialogOpen(false)}
-              className="border-primary text-primary hover:bg-primary hover:text-white dark:border-primary dark:text-primary dark:hover:bg-primary"
+              className="border-primary text-primary  dark:border-primary dark:text-primary dark:hover:bg-primary"
             >
               Close
             </Button>
@@ -292,7 +542,13 @@ export default function RecentOrders() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
+      <Dialog open={statusDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          setError(null);
+          setPendingStatusUpdate(null);
+        }
+        setStatusDialogOpen(open);
+      }}>
         <DialogContent className="bg-white dark:bg-boxdark">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-black dark:text-white">Update Order Status</DialogTitle>
@@ -301,32 +557,44 @@ export default function RecentOrders() {
             <div className="space-y-6">
               <div className="space-y-2">
                 <p className="text-gray-600 dark:text-gray-400">Current Status: 
-                  <Badge color={getStatusColor(selectedOrder.status)}>
-                    {selectedOrder.status}
+                  <Badge color={getStatusColor(selectedOrder.orderStatus)}>
+                    {selectedOrder.orderStatus}
                   </Badge>
                 </p>
                 <Select
-                  onValueChange={(value: Order["status"]) =>
-                    handleStatusUpdate(selectedOrder.id, value)
+                  onValueChange={(value: Order["orderStatus"]) =>
+                    handleStatusUpdate(selectedOrder._id, value)
                   }
-                  defaultValue={selectedOrder.status}
+                  defaultValue={selectedOrder.orderStatus}
+                  disabled={isUpdating}
                 >
                   <SelectTrigger className="w-full border-stroke dark:border-strokedark">
                     <SelectValue placeholder="Select new status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Delivered">Delivered</SelectItem>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="Canceled">Canceled</SelectItem>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="PROCESSING">Processing</SelectItem>
+                    <SelectItem value="DELIVERED">Delivered</SelectItem>
+                    <SelectItem value="CANCELED">Canceled</SelectItem>
                   </SelectContent>
                 </Select>
+                {error && (
+                  <div className="text-sm text-red-500 mt-2 transition-all duration-200 ease-in-out">
+                    {error}
+                  </div>
+                )}
               </div>
               <DialogFooter>
                 <div className="flex gap-3">
                   <Button 
                     variant="outline" 
-                    onClick={() => setStatusDialogOpen(false)}
+                    onClick={() => {
+                      setStatusDialogOpen(false);
+                      setError(null);
+                      setPendingStatusUpdate(null);
+                    }}
                     className="border-gray-300 text-gray-600 hover:bg-gray-100 dark:border-strokedark dark:text-gray-400 dark:hover:bg-boxdark-2"
+                    disabled={isUpdating}
                   >
                     Cancel
                   </Button>
@@ -336,6 +604,60 @@ export default function RecentOrders() {
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <DialogContent className="bg-white dark:bg-boxdark">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold text-black dark:text-white">
+              Confirm Status Update
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-gray-600 dark:text-gray-400">
+              Are you sure you want to update the order status to{' '}
+              <span className="font-medium text-black dark:text-white">
+                {pendingStatusUpdate?.newStatus}
+              </span>?
+            </p>
+          </div>
+          <DialogFooter>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setConfirmDialogOpen(false);
+                  setPendingStatusUpdate(null);
+                }}
+                disabled={isUpdating}
+                className="border-gray-300 text-gray-600 hover:bg-gray-100 dark:border-strokedark dark:text-gray-400 dark:hover:bg-boxdark-2"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmStatusUpdate}
+                disabled={isUpdating}
+                className="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed relative"
+              >
+                {isUpdating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  'Confirm Update'
+                )}
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {isUpdating && (
+        <div className="fixed top-4 right-4 z-50 bg-primary/10 text-primary px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 transition-all duration-200 ease-in-out">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Updating order status...</span>
+        </div>
+      )}
     </div>
   );
 }

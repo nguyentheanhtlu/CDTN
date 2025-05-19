@@ -95,10 +95,10 @@ const ShopDetails = () => {
 
   return (
     <>
-      <Breadcrumb title={"Shop Details"} pages={["shop details"]} />
+      <Breadcrumb title={"Chi tiết sản phẩm"} pages={["chi tiết sản phẩm"]} />
 
       {product.title === "" ? (
-        "Please add product"
+        "Vui lòng thêm sản phẩm"
       ) : (
         <>
           <section className="overflow-hidden relative pb-20 pt-5 lg:pt-20 xl:pt-28">
@@ -169,7 +169,7 @@ const ShopDetails = () => {
                     </h2>
 
                     <div className="inline-flex font-medium text-custom-sm text-white bg-blue rounded py-0.5 px-2.5">
-                      30% OFF
+                      Giảm 30%
                     </div>
                   </div>
 
@@ -283,10 +283,10 @@ const ShopDetails = () => {
                         </svg>
                       </div>
 
-                      <span> (5 customer reviews) </span>
+                      <span> (5 đánh giá từ khách hàng) </span>
                     </div>
 
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2.5">
                       <svg
                         width="20"
                         height="20"
@@ -311,19 +311,19 @@ const ShopDetails = () => {
                         </defs>
                       </svg>
 
-                      <span className="text-green"> In Stock </span>
+                      <span className="text-green"> Còn hàng </span>
                     </div>
                   </div>
 
-                  <h3 className="font-medium text-custom-1 mb-4.5">
+                  <div className="flex items-center gap-2.5 mb-4.5">
                     <span className="text-sm sm:text-base text-dark">
-                      Price: ${product.price}
+                      Giá: ${product.price}
                     </span>
                     <span className="line-through">
                       {" "}
                       ${product.discountedPrice}{" "}
                     </span>
-                  </h3>
+                  </div>
 
                   <ul className="flex flex-col gap-2">
                     <li className="flex items-center gap-2.5">
@@ -345,7 +345,7 @@ const ShopDetails = () => {
                           fill="#3C50E0"
                         />
                       </svg>
-                      Free delivery available
+                      Miễn phí vận chuyển
                     </li>
 
                     <li className="flex items-center gap-2.5">
@@ -367,7 +367,7 @@ const ShopDetails = () => {
                           fill="#3C50E0"
                         />
                       </svg>
-                      Sales 30% Off Use Code: PROMO30
+                      Giảm giá 30% khi sử dụng mã: PROMO30
                     </li>
                   </ul>
 
@@ -733,44 +733,30 @@ const ShopDetails = () => {
                 >
                   <div className="max-w-[670px] w-full">
                     <h2 className="font-medium text-2xl text-dark mb-7">
-                      Specifications:
+                      Thông số kỹ thuật:
                     </h2>
 
                     <p className="mb-6">
-                      Lorem Ipsum is simply dummy text of the printing and
-                      typesetting industry. Lorem Ipsum has been the
-                      industry&apos;s standard dummy text ever since the 1500s,
-                      when an unknown printer took a galley of type and
-                      scrambled it to make a type specimen book.
+                      Lorem Ipsum là văn bản giả được sử dụng trong ngành in ấn và sắp chữ. Lorem Ipsum đã trở thành văn bản giả tiêu chuẩn của ngành kể từ những năm 1500, khi một nhà in vô danh ghép nhiều đoạn văn bản với nhau để tạo thành một bản mẫu văn bản.
                     </p>
                     <p className="mb-6">
-                      It has survived not only five centuries, but also the leap
-                      into electronic typesetting, remaining essentially
-                      unchanged. It was popularised in the 1960s.
+                      Nó không chỉ tồn tại 5 thế kỷ, mà còn là bước nhảy vọt trong lĩnh vực sắp chữ điện tử, về cơ bản không có gì thay đổi. Nó được phổ biến trong những năm 1960.
                     </p>
                     <p>
-                      with the release of Letraset sheets containing Lorem Ipsum
-                      passages, and more recently with desktop publishing
-                      software like Aldus PageMaker including versions.
+                      với việc phát hành các tờ Letraset chứa các đoạn Lorem Ipsum, và gần đây hơn là các phần mềm xuất bản trên máy tính như Aldus PageMaker bao gồm các phiên bản.
                     </p>
                   </div>
 
-                  <div className="max-w-[447px] w-full">
+                  <div className="max-w-[670px] w-full">
                     <h2 className="font-medium text-2xl text-dark mb-7">
-                      Care & Maintenance:
+                      Bảo quản & Bảo trì:
                     </h2>
 
                     <p className="mb-6">
-                      Lorem Ipsum is simply dummy text of the printing and
-                      typesetting industry. Lorem Ipsum has been the
-                      industry&apos;s standard dummy text ever since the 1500s,
-                      when an unknown printer took a galley of type and
-                      scrambled it to make a type specimen book.
+                      Lorem Ipsum là văn bản giả được sử dụng trong ngành in ấn và sắp chữ. Lorem Ipsum đã trở thành văn bản giả tiêu chuẩn của ngành kể từ những năm 1500, khi một nhà in vô danh ghép nhiều đoạn văn bản với nhau để tạo thành một bản mẫu văn bản.
                     </p>
                     <p>
-                      It has survived not only five centuries, but also the leap
-                      into electronic typesetting, remaining essentially
-                      unchanged. It was popularised in the 1960s.
+                      Nó không chỉ tồn tại 5 thế kỷ, mà còn là bước nhảy vọt trong lĩnh vực sắp chữ điện tử, về cơ bản không có gì thay đổi. Nó được phổ biến trong những năm 1960.
                     </p>
                   </div>
                 </div>
@@ -787,7 +773,7 @@ const ShopDetails = () => {
                   {/* <!-- info item --> */}
                   <div className="rounded-md even:bg-gray-1 flex py-4 px-4 sm:px-5">
                     <div className="max-w-[450px] min-w-[140px] w-full">
-                      <p className="text-sm sm:text-base text-dark">Brand</p>
+                      <p className="text-sm sm:text-base text-dark">Thương hiệu</p>
                     </div>
                     <div className="w-full">
                       <p className="text-sm sm:text-base text-dark">Apple</p>
@@ -797,7 +783,7 @@ const ShopDetails = () => {
                   {/* <!-- info item --> */}
                   <div className="rounded-md even:bg-gray-1 flex py-4 px-4 sm:px-5">
                     <div className="max-w-[450px] min-w-[140px] w-full">
-                      <p className="text-sm sm:text-base text-dark">Model</p>
+                      <p className="text-sm sm:text-base text-dark">Mẫu</p>
                     </div>
                     <div className="w-full">
                       <p className="text-sm sm:text-base text-dark">
@@ -810,12 +796,12 @@ const ShopDetails = () => {
                   <div className="rounded-md even:bg-gray-1 flex py-4 px-4 sm:px-5">
                     <div className="max-w-[450px] min-w-[140px] w-full">
                       <p className="text-sm sm:text-base text-dark">
-                        Display Size
+                        Kích thước màn hình
                       </p>
                     </div>
                     <div className="w-full">
                       <p className="text-sm sm:text-base text-dark">
-                        6.7 inches
+                        6.7 inch
                       </p>
                     </div>
                   </div>
@@ -824,7 +810,7 @@ const ShopDetails = () => {
                   <div className="rounded-md even:bg-gray-1 flex py-4 px-4 sm:px-5">
                     <div className="max-w-[450px] min-w-[140px] w-full">
                       <p className="text-sm sm:text-base text-dark">
-                        Display Type
+                        Loại màn hình
                       </p>
                     </div>
                     <div className="w-full">
@@ -839,12 +825,12 @@ const ShopDetails = () => {
                   <div className="rounded-md even:bg-gray-1 flex py-4 px-4 sm:px-5">
                     <div className="max-w-[450px] min-w-[140px] w-full">
                       <p className="text-sm sm:text-base text-dark">
-                        Display Resolution
+                        Độ phân giải màn hình
                       </p>
                     </div>
                     <div className="w-full">
                       <p className="text-sm sm:text-base text-dark">
-                        1284 x 2778 pixels, 19.5:9 ratio
+                        1284 x 2778 pixels, tỷ lệ 19.5:9
                       </p>
                     </div>
                   </div>
@@ -864,7 +850,7 @@ const ShopDetails = () => {
                   {/* <!-- info item --> */}
                   <div className="rounded-md even:bg-gray-1 flex py-4 px-4 sm:px-5">
                     <div className="max-w-[450px] min-w-[140px] w-full">
-                      <p className="text-sm sm:text-base text-dark">Memory</p>
+                      <p className="text-sm sm:text-base text-dark">Bộ nhớ</p>
                     </div>
                     <div className="w-full">
                       <p className="text-sm sm:text-base text-dark">
@@ -877,7 +863,7 @@ const ShopDetails = () => {
                   <div className="rounded-md even:bg-gray-1 flex py-4 px-4 sm:px-5">
                     <div className="max-w-[450px] min-w-[140px] w-full">
                       <p className="text-sm sm:text-base text-dark">
-                        Main Camera
+                        Camera chính
                       </p>
                     </div>
                     <div className="w-full">
