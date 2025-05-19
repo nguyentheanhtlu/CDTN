@@ -1,6 +1,23 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+export interface IVoucher {
+    type: 'discount' | 'free_shipping'; // loại voucher
+    value: number; // giá trị giảm giá (phần trăm hoặc số tiền)
+    status: 'active' | 'used' | 'expired';
+    expiredAt?: Date;
+}
+
+export interface IUserAddress {
+    name: string;
+    phone: string;
+    addressLine: string;
+    ward: string;
+    district: string;
+    province: string;
+    isDefault?: boolean;
+}
+
 export interface IUser extends Document {
     email: string;
     password?: string;
@@ -13,6 +30,11 @@ export interface IUser extends Document {
     isVerified: boolean;
     verificationCode?: string;
     verificationCodeExpires?: Date;
+    totalSpent?: number;
+    vipLevel?: number;
+    vipRank?: 'Đồng' | 'Bạc' | 'Vàng' | 'Kim cương';
+    vouchers?: IVoucher[];
+    addresses?: IUserAddress[];
     comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -49,7 +71,50 @@ const userSchema = new Schema<IUser>({
         default: false
     },
     verificationCode: String,
-    verificationCodeExpires: Date
+    verificationCodeExpires: Date,
+    totalSpent: {
+        type: Number,
+        default: 0
+    },
+    vipLevel: {
+        type: Number,
+        default: 1
+    },
+    vipRank: {
+        type: String,
+        enum: ['Đồng', 'Bạc', 'Vàng', 'Kim cương'],
+        default: 'Đồng'
+    },
+    vouchers: [
+        {
+            type: {
+                type: String,
+                enum: ['discount', 'free_shipping'],
+                required: true
+            },
+            value: {
+                type: Number,
+                required: true
+            },
+            status: {
+                type: String,
+                enum: ['active', 'used', 'expired'],
+                default: 'active'
+            },
+            expiredAt: Date
+        }
+    ],
+    addresses: [
+        {
+            name: { type: String, required: true },
+            phone: { type: String, required: true },
+            addressLine: { type: String, required: true },
+            ward: { type: String, required: true },
+            district: { type: String, required: true },
+            province: { type: String, required: true },
+            isDefault: { type: Boolean, default: false }
+        }
+    ]
 }, {
     timestamps: true
 });

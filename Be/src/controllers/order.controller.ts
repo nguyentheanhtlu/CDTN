@@ -3,6 +3,8 @@ import { Order } from '../models/order.model';
 import { Cart } from '../models/cart.model';
 import { Product } from '../models/product.model';
 import { payWithVNPay, payWithMoMo } from './payment.controller'; // Import các hàm thanh toán
+import { User } from '../models/user.model';
+import { sendOrderConfirmationEmail } from '../utils/sendEmail';
 
 interface AuthRequest extends Request {
     user?: any;
@@ -12,14 +14,54 @@ interface AuthRequest extends Request {
 export const createOrder = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user._id;
-        const { shippingAddress, paymentMethod } = req.body;
+        const { 
+            shippingAddress, // Có thể là địa chỉ mới hoặc index của địa chỉ đã lưu
+            paymentMethod,
+            useSavedAddress, // Boolean: true nếu dùng địa chỉ đã lưu
+            savedAddressIndex // Index của địa chỉ đã lưu nếu useSavedAddress = true
+        } = req.body;
+
+        // Kiểm tra phương thức thanh toán hợp lệ
+        const validPaymentMethods = ['VNPay', 'MoMo', 'COD'];
+        if (!validPaymentMethods.includes(paymentMethod)) {
+            return res.status(400).json({ 
+                message: 'Phương thức thanh toán không hợp lệ. Vui lòng chọn một trong các phương thức: VNPay, MoMo, hoặc Thanh toán khi nhận hàng' 
+            });
+        }
 
         // Lấy giỏ hàng của người dùng
         const cart = await Cart.findOne({ user: userId })
             .populate('items.product');
-
         if (!cart || cart.items.length === 0) {
             return res.status(400).json({ message: 'Giỏ hàng trống' });
+        }
+
+        // Xử lý địa chỉ giao hàng
+        let finalShippingAddress;
+        if (useSavedAddress) {
+            // Lấy địa chỉ đã lưu từ user
+            const user = await User.findById(userId);
+            if (!user || !user.addresses || !user.addresses[savedAddressIndex]) {
+                return res.status(400).json({ message: 'Không tìm thấy địa chỉ đã lưu' });
+            }
+            const savedAddress = user.addresses[savedAddressIndex];
+            finalShippingAddress = {
+                ...savedAddress,
+                isNewAddress: false
+            };
+        } else {
+            // Kiểm tra địa chỉ mới
+            if (!shippingAddress || !shippingAddress.name || !shippingAddress.phone || 
+                !shippingAddress.addressLine || !shippingAddress.ward || 
+                !shippingAddress.district || !shippingAddress.province) {
+                return res.status(400).json({ 
+                    message: 'Vui lòng điền đầy đủ thông tin địa chỉ giao hàng' 
+                });
+            }
+            finalShippingAddress = {
+                ...shippingAddress,
+                isNewAddress: true
+            };
         }
 
         // Kiểm tra số lượng tồn kho
@@ -37,8 +79,9 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
             user: userId,
             items: cart.items,
             totalAmount: cart.totalAmount,
-            shippingAddress,
-            paymentMethod
+            shippingAddress: finalShippingAddress,
+            paymentMethod,
+            status: paymentMethod === 'COD' ? 'pending' : 'processing'
         });
 
         // Cập nhật số lượng tồn kho và số lượng đã bán
@@ -54,17 +97,41 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
         // Xóa giỏ hàng
         await Cart.findByIdAndDelete(cart._id);
 
-        // Kiểm tra phương thức thanh toán và chuyển hướng
-        if (paymentMethod === 'VNPay') {
-            return payWithVNPay(req, res);
-        } else if (paymentMethod === 'MoMo') {
-            return payWithMoMo(req, res);
+        // Gửi email xác nhận đơn hàng
+        try {
+            const user = await User.findById(userId);
+            if (user) {
+                await sendOrderConfirmationEmail(order, user.email, user.fullName);
+            }
+        } catch (emailError) {
+            console.error('Lỗi khi gửi email xác nhận:', emailError);
+            // Không trả về lỗi cho client nếu gửi email thất bại
         }
 
-        res.status(201).json({
-            message: 'Đặt hàng thành công',
-            order
-        });
+        // Xử lý thanh toán dựa trên phương thức
+        switch (paymentMethod) {
+            case 'VNPay':
+                req.body.orderId = order._id;
+                req.body.amount = order.totalAmount;
+                return payWithVNPay(req, res);
+            
+            case 'MoMo':
+                req.body.amount = order.totalAmount;
+                return payWithMoMo(req, res);
+            
+            case 'COD':
+                res.status(201).json({
+                    message: 'Đặt hàng thành công. Vui lòng kiểm tra email để xem chi tiết đơn hàng.',
+                    order
+                });
+                break;
+            
+            default:
+                res.status(201).json({
+                    message: 'Đặt hàng thành công. Vui lòng kiểm tra email để xem chi tiết đơn hàng.',
+                    order
+                });
+        }
     } catch (error) {
         res.status(500).json({ message: 'Lỗi khi tạo đơn hàng', error });
     }
@@ -81,16 +148,58 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
             return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
         }
 
+        let voucherDetail = null;
         order.orderStatus = orderStatus;
         if (orderStatus === 'DELIVERED') {
             order.paymentStatus = 'PAID';
+
+            // Cập nhật tổng chi tiêu, VIP cho user
+            const user = await User.findById(order.user);
+            if (user) {
+                // Cộng tổng chi tiêu
+                user.totalSpent = (user.totalSpent || 0) + order.totalAmount;
+
+                // Xác định VIP
+                let vipLevel = 1;
+                let vipRank: 'Đồng' | 'Bạc' | 'Vàng' | 'Kim cương' = 'Đồng';
+                if (user.totalSpent >= 10000000) {
+                    vipLevel = 4; vipRank = 'Kim cương';
+                } else if (user.totalSpent >= 5000000) {
+                    vipLevel = 3; vipRank = 'Vàng';
+                } else if (user.totalSpent >= 2000000) {
+                    vipLevel = 2; vipRank = 'Bạc';
+                }
+                user.vipLevel = vipLevel;
+                user.vipRank = vipRank;
+
+                // Áp dụng voucher nếu có
+                let appliedVoucher = null;
+                if (user.vouchers && user.vouchers.length > 0) {
+                    // Ưu tiên free_shipping trước, sau đó discount
+                    appliedVoucher = user.vouchers.find(v => v.status === 'active' && (!v.expiredAt || v.expiredAt > new Date()));
+                    if (appliedVoucher) {
+                        appliedVoucher.status = 'used';
+                        if (appliedVoucher.type === 'free_shipping') {
+                            voucherDetail = { type: 'free_shipping' as const, message: 'Đơn hàng được miễn phí vận chuyển' };
+                            order.appliedVoucher = voucherDetail;
+                        } else if (appliedVoucher.type === 'discount') {
+                            const discountAmount = Math.round(order.totalAmount * (appliedVoucher.value / 100));
+                            voucherDetail = { type: 'discount' as const, value: appliedVoucher.value, discountAmount, message: `Đơn hàng được giảm ${appliedVoucher.value}% (${discountAmount}đ)` };
+                            order.appliedVoucher = voucherDetail;
+                        }
+                    }
+                }
+
+                await user.save();
+            }
         }
 
         await order.save();
 
         res.json({
             message: 'Cập nhật trạng thái đơn hàng thành công',
-            order
+            order,
+            voucherDetail
         });
     } catch (error) {
         res.status(500).json({ message: 'Lỗi khi cập nhật trạng thái đơn hàng', error });

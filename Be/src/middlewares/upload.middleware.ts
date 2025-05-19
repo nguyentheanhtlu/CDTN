@@ -8,7 +8,7 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
   if (file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
-    cb(new Error('Not an image! Please upload only images.'));
+    cb(new Error('Only image files are allowed!'));
   }
 };
 
@@ -17,7 +17,7 @@ const multerConfig = {
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
+    fileSize: 5 * 1024 * 1024 // Giới hạn kích thước file 5MB
   }
 };
 

@@ -8,6 +8,28 @@ import Orders from "../Orders";
 const MyAccount = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [addressModal, setAddressModal] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: "Jhon",
+    lastName: "Deo",
+    country: "0",
+    oldPassword: "",
+    newPassword: "",
+    confirmNewPassword: ""
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Handle form submission
+    console.log('Form submitted:', formData);
+  };
 
   const openAddressModal = () => {
     setAddressModal(true);
@@ -577,7 +599,7 @@ const MyAccount = () => {
                 activeTab === "account-details" ? "block" : "hidden"
               }`}
             >
-              <form>
+              <form onSubmit={handleSubmit}>
                 <div className="bg-white shadow-1 rounded-xl p-4 sm:p-8.5">
                   <div className="flex flex-col lg:flex-row gap-5 sm:gap-8 mb-5">
                     <div className="w-full">
@@ -590,7 +612,8 @@ const MyAccount = () => {
                         name="firstName"
                         id="firstName"
                         placeholder="Jhon"
-                        value="Jhon"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
                         className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                       />
                     </div>
@@ -605,19 +628,25 @@ const MyAccount = () => {
                         name="lastName"
                         id="lastName"
                         placeholder="Deo"
-                        value="Deo"
+                        value={formData.lastName}
+                        onChange={handleInputChange}
                         className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                       />
                     </div>
                   </div>
 
                   <div className="mb-5">
-                    <label htmlFor="countryName" className="block mb-2.5">
+                    <label htmlFor="country" className="block mb-2.5">
                       Country/ Region <span className="text-red">*</span>
                     </label>
 
                     <div className="relative">
-                      <select className="w-full bg-gray-1 rounded-md border border-gray-3 text-dark-4 py-3 pl-5 pr-9 duration-200 appearance-none outline-none focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20">
+                      <select 
+                        name="country"
+                        value={formData.country}
+                        onChange={handleInputChange}
+                        className="w-full bg-gray-1 rounded-md border border-gray-3 text-dark-4 py-3 pl-5 pr-9 duration-200 appearance-none outline-none focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
+                      >
                         <option value="0">Australia</option>
                         <option value="1">America</option>
                         <option value="2">England</option>
@@ -641,6 +670,54 @@ const MyAccount = () => {
                         </svg>
                       </span>
                     </div>
+                  </div>
+
+                  <div className="mb-5">
+                    <label htmlFor="oldPassword" className="block mb-2.5">
+                      Old Password
+                    </label>
+
+                    <input
+                      type="password"
+                      name="oldPassword"
+                      id="oldPassword"
+                      value={formData.oldPassword}
+                      onChange={handleInputChange}
+                      autoComplete="on"
+                      className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
+                    />
+                  </div>
+
+                  <div className="mb-5">
+                    <label htmlFor="newPassword" className="block mb-2.5">
+                      New Password
+                    </label>
+
+                    <input
+                      type="password"
+                      name="newPassword"
+                      id="newPassword"
+                      value={formData.newPassword}
+                      onChange={handleInputChange}
+                      autoComplete="on"
+                      className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
+                    />
+                  </div>
+
+                  <div className="mb-5">
+                    <label htmlFor="confirmNewPassword" className="block mb-2.5">
+                      Confirm New Password
+                    </label>
+
+                    <input
+                      type="password"
+                      name="confirmNewPassword"
+                      id="confirmNewPassword"
+                      value={formData.confirmNewPassword}
+                      onChange={handleInputChange}
+                      autoComplete="on"
+                      className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
+                    />
                   </div>
 
                   <button

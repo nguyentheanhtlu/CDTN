@@ -32,15 +32,13 @@ const navItems: NavItem[] = [
     path: "/calendar",
   },
   {
-    name: "Forms",
-    icon: <ListIcon />,
-    subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-  },
-  {
     name: "Tables",
     icon: <TableIcon />,
-    subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
+    subItems: [{ name: "User", path: "/basic-tables", pro: false },
+              {name : "Products" , path : "/products" , pro: false}
+    ],
   },
+
  
 ];
 
