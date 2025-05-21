@@ -24,6 +24,6 @@ export const momoConfig = {
   secretkey: process.env.MOMO_SECRET_KEY || "K951B6PE1waDMi640xX08PD3vg6EkVlz",
   endpoint: 'https://test-payment.momo.vn/v2/gateway/api/create',
   momo_ReturnUrl: process.env.MOMO_RETURN_URL || 'http://localhost:5000/api/payment/momo_return',
-  notifyUrl: process.env.MOMO_NOTIFY_URL || 'http://localhost:5000/api/payment/momo-notify',
+  notifyUrl: process.env.MOMO_NOTIFY_URL || 'http://localhost:5000/api/payment/momo/callback',
   frontendReturnUrl: process.env.FRONTEND_URL || 'http://localhost:3000/payment/momo_return'
 }

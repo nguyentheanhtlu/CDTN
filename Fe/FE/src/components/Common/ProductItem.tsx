@@ -22,11 +22,12 @@ const ProductItem = ({ item, viewMode = 'grid' }: ProductItemProps) => {
   const dispatch = useDispatch<AppDispatch>();
 
   // Get the first preview image or use a fallback
-  const previewImage = item.images?.previews?.[0] || '/images/placeholder.png';
+  const previewImage = item.images && item.images.length > 0 ? item.images[0] : '/images/placeholder.png';
 
   // update the QuickView state
   const handleQuickView = () => {
     dispatch(updateQuickView(item));
+    openModal();
   };
 
   // add to cart
@@ -41,86 +42,89 @@ const ProductItem = ({ item, viewMode = 'grid' }: ProductItemProps) => {
   };
 
   const handleProductDetails = () => {
-    dispatch(updateproductDetails({ ...item }));
+    dispatch(updateproductDetails(item));
   };
 
   const hasDiscount = item.discount > 0;
-  const discountPercentage = item.discount;
+  const discountedPrice = hasDiscount
+    ? item.price * (1 - item.discount / 100)
+    : item.price;
 
   return (
-    <div className={`product-item ${viewMode === 'list' ? 'list-view' : 'grid-view'}`}>
-      <div className="product-image">
-        <Link href={`/product/${item._id}`}>
+    <div className={`product-item  rounded-2xl shadow-lg p-5 flex flex-col items-center transition hover:shadow-2xl ${viewMode === 'list' ? 'list-view' : 'grid-view'}`}>
+      <div className="relative w-full flex flex-col items-center justify-center min-h-[220px]">
+        <Link href={`/products/${item._id}`} className="block w-full">
           <Image
             src={previewImage}
-            alt={item.title}
-            width={400}
-            height={400}
-            className="img-fluid"
+            alt={item.name}
+            width={220}
+            height={220}
+            className="object-contain w-full h-44 mx-auto rounded-xl "
           />
         </Link>
         {hasDiscount && (
-          <span className="discount-badge">-{discountPercentage}%</span>
+          <span className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg z-10">
+            -{item.discount}%
+          </span>
         )}
-        <div className="product-actions">
+        <div className="flex justify-center gap-3 mt-3">
           <button
-            className="action-btn quick-view"
+            className="border border-gray-200 rounded-full w-10 h-10 flex items-center justify-center shadow hover:bg-blue-50 hover:text-blue-600 transition"
             onClick={handleQuickView}
-            title="Quick View"
+            title="Xem nhanh"
           >
-            <i className="far fa-eye"></i>
+            <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" strokeWidth="2" d="M21 12c0 1.2-4.03 6-9 6s-9-4.8-9-6c0-1.2 4.03-6 9-6s9 4.8 9 6Z"/>
+              <path stroke="currentColor" strokeWidth="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+            </svg>
           </button>
           <button
-            className="action-btn wishlist"
+            className="border border-gray-200 rounded-full w-10 h-10 flex items-center justify-center shadow hover:bg-pink-50 hover:text-pink-500 transition"
             onClick={handleAddToWishlist}
-            title="Add to Wishlist"
+            title="Yêu thích"
           >
-            <i className="far fa-heart"></i>
+            <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+              <path d="m12.75 20.66 6.184-7.098c2.677-2.884 2.559-6.506.754-8.705-.898-1.095-2.206-1.816-3.72-1.855-1.293-.034-2.652.43-3.963 1.442-1.315-1.012-2.678-1.476-3.973-1.442-1.515.04-2.825.76-3.724 1.855-1.806 2.201-1.915 5.823.772 8.706l6.183 7.097c.19.216.46.34.743.34a.985.985 0 0 0 .743-.34Z"/>
+            </svg>
           </button>
           <button
-            className="action-btn cart"
+            className="bg-blue-600 border border-gray-200  rounded-full w-10 h-10 flex items-center justify-center shadow hover:bg-blue-700 transition"
             onClick={handleAddToCart}
-            title="Add to Cart"
+            title="Thêm vào giỏ"
           >
-            <i className="fas fa-shopping-cart"></i>
+            <svg className="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+              <path fillRule="evenodd" d="M4 4a1 1 0 0 1 1-1h1.5a1 1 0 0 1 .979.796L7.939 6H19a1 1 0 0 1 .979 1.204l-1.25 6a1 1 0 0 1-.979.796H9.605l.208 1H17a3 3 0 1 1-2.83 2h-2.34a3 3 0 1 1-4.009-1.76L5.686 5H5a1 1 0 0 1-1-1Z" clipRule="evenodd"/>
+            </svg>
           </button>
         </div>
       </div>
-      <div className="product-content">
-        <h3 className="product-title">
-          <Link href={`/product/${item._id}`}>{item.title}</Link>
-        </h3>
-        {viewMode === 'list' && (
-          <p className="product-description">{item.description}</p>
-        )}
-        <div className="product-price">
-          {hasDiscount ? (
-            <>
-              <span className="price-old">${item.price.toFixed(2)}</span>
-              <span className="price-new">${item.discountedPrice.toFixed(2)}</span>
-            </>
-          ) : (
-            <span className="price">${item.price.toFixed(2)}</span>
-          )}
-        </div>
-        <div className="product-rating">
+      <div className="flex-1 flex flex-col justify-between w-full mt-4">
+        <div className="flex items-center gap-1 mb-1 justify-center">
           {[...Array(5)].map((_, index) => (
             <i
               key={index}
-              className={`fas fa-star ${
-                index < Math.round(item.averageRating) ? 'active' : ''
-              }`}
+              className={`fas fa-star text-yellow-400 ${index < Math.round(item.averageRating || 0) ? 'opacity-100' : 'opacity-30'}`}
             ></i>
           ))}
-          <span className="rating-count">({item.reviews})</span>
+          <span className="text-xs text-gray-500 ml-1">( {Array.isArray(item.reviews) ? item.reviews.length : (item.reviewCount || 0)} )</span>
+        </div>
+        <h3 className="product-title font-semibold text-base leading-tight mb-2 min-h-[40px] text-center text-gray-900">
+          <Link href={`/product/${item._id}`}>{item.name}</Link>
+        </h3>
+        <div className="product-price mb-2 flex items-end gap-2 justify-center">
+          {hasDiscount ? (
+            <>
+              <span className="price-new text-blue-600 font-bold text-lg">{discountedPrice.toLocaleString('vi-VN')}₫</span>
+              <span className="price-old text-gray-400 line-through text-sm">{item.price.toLocaleString('vi-VN')}₫</span>
+            </>
+          ) : (
+            <span className="price text-blue-600 font-bold text-lg">{item.price.toLocaleString('vi-VN')}₫</span>
+          )}
         </div>
         {viewMode === 'list' && (
-          <div className="product-meta">
+          <div className="product-meta text-sm text-gray-500 flex flex-wrap gap-2">
             <span className="stock-status">
-              {item.isAvailable ? 'In Stock' : 'Out of Stock'}
-            </span>
-            <span className="category">
-              Category: {item.category}
+              {item.isAvailable ? 'Còn hàng' : 'Hết hàng'}
             </span>
           </div>
         )}

@@ -28,7 +28,6 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
                 message: 'Phương thức thanh toán không hợp lệ. Vui lòng chọn một trong các phương thức: VNPay, MoMo, hoặc Thanh toán khi nhận hàng' 
             });
         }
-
         // Lấy giỏ hàng của người dùng
         const cart = await Cart.findOne({ user: userId })
             .populate('items.product');
@@ -41,12 +40,16 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
         if (useSavedAddress) {
             // Lấy địa chỉ đã lưu từ user
             const user = await User.findById(userId);
-            if (!user || !user.addresses || !user.addresses[savedAddressIndex]) {
+            if (!user || !user.addresses || user.addresses.length === 0) {
                 return res.status(400).json({ message: 'Không tìm thấy địa chỉ đã lưu' });
             }
-            const savedAddress = user.addresses[savedAddressIndex];
+            // Tìm địa chỉ mặc định (có isDefault: true)
+            const defaultAddress = user.addresses.find(addr => addr.isDefault === true);
+            if (!defaultAddress) {
+                return res.status(400).json({ message: 'Không tìm thấy địa chỉ mặc định' });
+            }
             finalShippingAddress = {
-                ...savedAddress,
+                ...defaultAddress,
                 isNewAddress: false
             };
         } else {
@@ -81,7 +84,8 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
             totalAmount: cart.totalAmount,
             shippingAddress: finalShippingAddress,
             paymentMethod,
-            status: paymentMethod === 'COD' ? 'pending' : 'processing'
+            status: paymentMethod === 'COD' ? 'pending' : 'processing',
+            paymentStatus: paymentMethod === 'MoMo' ? 'PAID' : 'FAILED'
         });
 
         // Cập nhật số lượng tồn kho và số lượng đã bán
@@ -276,5 +280,76 @@ export const getOrderDetail = async (req: AuthRequest, res: Response) => {
         res.json(order);
     } catch (error) {
         res.status(500).json({ message: 'Lỗi khi lấy chi tiết đơn hàng', error });
+    }
+};
+
+// Kiểm tra trạng thái thanh toán
+export const checkPaymentStatus = async (req: AuthRequest, res: Response) => {
+    try {
+        const { orderId } = req.params;
+        const userId = req.user._id;
+        const isAdmin = req.user.role === 'admin';
+
+        const order = await Order.findById(orderId)
+            .populate('user', 'fullName email')
+            .populate('items.product', 'name price images');
+
+        if (!order) {
+            return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
+        }
+
+        // Chỉ admin hoặc chủ đơn hàng mới có thể xem
+        if (!isAdmin && order.user !== userId) {
+            return res.status(403).json({ message: 'Không có quyền truy cập' });
+        }
+
+        res.json({
+            orderId: order._id,
+            paymentStatus: order.paymentStatus,
+            orderStatus: order.orderStatus,
+            paymentMethod: order.paymentMethod
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi khi kiểm tra trạng thái thanh toán', error });
+    }
+};
+
+// Cập nhật trạng thái thanh toán
+export const updatePaymentStatus = async (req: AuthRequest, res: Response) => {
+    try {
+        const { orderId } = req.params;
+        const { paymentStatus, orderStatus, paymentMethod } = req.body;
+        const userId = req.user._id;
+        const isAdmin = req.user.role === 'admin';
+
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
+        }
+
+        // Chỉ admin hoặc chủ đơn hàng mới có thể cập nhật
+        if (!isAdmin && order.user !== userId.toString()) {
+            return res.status(403).json({ message: 'Không có quyền truy cập' });
+        }
+
+        // Cập nhật trạng thái
+        order.paymentStatus = paymentStatus;
+        order.orderStatus = orderStatus;
+        if (paymentMethod) {
+            order.paymentMethod = paymentMethod;
+        }
+        await order.save();
+
+        res.json({
+            message: 'Cập nhật trạng thái thanh toán thành công',
+            order: {
+                _id: order._id,
+                paymentStatus: order.paymentStatus,
+                orderStatus: order.orderStatus,
+                paymentMethod: order.paymentMethod
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi khi cập nhật trạng thái thanh toán', error });
     }
 }; 

@@ -139,7 +139,7 @@ const QuickViewModal = () => {
                   </button>
 
                   <Image
-                    src={product.images?.previews?.[activePreview] || ""}
+                    src={product.images[0] || ""}
                     alt="products-details"
                     width={400}
                     height={400}
@@ -222,16 +222,16 @@ const QuickViewModal = () => {
               <div className="space-y-6">
                 <div>
                   <h4 className="font-semibold text-lg text-dark mb-3.5">
-                    Price
+                    Giá
                   </h4>
 
                   <span className="flex items-center gap-2">
                     <span className="font-semibold text-dark text-xl xl:text-heading-4">
-                      ${product.discountedPrice || product.price}
+                      {(product.discountedPrice || product.price).toLocaleString('vi-VN')} VNĐ
                     </span>
                     {product.discount > 0 && (
                       <span className="font-medium text-dark-4 text-lg xl:text-2xl line-through">
-                        ${product.price}
+                        {product.price.toLocaleString('vi-VN')} VNĐ
                       </span>
                     )}
                   </span>
@@ -239,7 +239,7 @@ const QuickViewModal = () => {
 
                 <div>
                   <h4 className="font-semibold text-lg text-dark mb-3.5">
-                    Quantity
+                    Số lượng
                   </h4>
 
                   <div className="flex items-center gap-2.5">
@@ -307,7 +307,7 @@ const QuickViewModal = () => {
                   onClick={handleAddToCart}
                   className="inline-flex font-medium text-white bg-blue py-3 px-7 rounded-md ease-out duration-200 hover:bg-blue-dark disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Add to Cart
+                  Thêm vào giỏ hàng
                 </button>
 
                 <button
@@ -328,7 +328,7 @@ const QuickViewModal = () => {
                       fill=""
                     />
                   </svg>
-                  Add to Wishlist
+                  Thêm vào yêu thích
                 </button>
               </div>
             </div>

@@ -78,11 +78,6 @@ const apiService = {
     return response.data;
   },
 
-  setDefaultAddress: async (id: string) => {
-    const response = await axios.put(`${API_URL}/users/addresses/${id}/default`, {}, { headers: getAuthHeader() });
-    return response.data;
-  },
-
   // Order APIs
   getMyOrders: async () => {
     const response = await axios.get(`${API_URL}/orders/my-orders`, { headers: getAuthHeader() });

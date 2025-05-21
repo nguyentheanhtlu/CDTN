@@ -21,7 +21,6 @@ interface ShippingProps {
 
 const Shipping: React.FC<ShippingProps> = ({ orderInfo, updateOrderInfo }) => {
   const [dropdown, setDropdown] = useState(false);
-
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     updateOrderInfo({
@@ -31,6 +30,7 @@ const Shipping: React.FC<ShippingProps> = ({ orderInfo, updateOrderInfo }) => {
       }
     });
   };
+
 
   const handleUseSavedAddress = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateOrderInfo({

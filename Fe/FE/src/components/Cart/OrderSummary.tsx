@@ -1,10 +1,21 @@
 import { selectCartItems, selectTotalPrice } from "@/redux/features/cart-slice";
 import { useAppSelector } from "@/redux/store";
 import React from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 
 const OrderSummary = () => {
+  const router = useRouter();
   const cartItems = useAppSelector(selectCartItems);
   const totalPrice = useAppSelector(selectTotalPrice);
+
+  const handleCheckout = () => {
+    if (cartItems.length === 0) {
+      toast.error('Giỏ hàng của bạn đang trống!');
+      return;
+    }
+    router.push('/checkout');
+  };
 
   return (
     <div className="lg:max-w-[455px] w-full">
@@ -53,7 +64,8 @@ const OrderSummary = () => {
 
           {/* <!-- checkout button --> */}
           <button
-            type="submit"
+            onClick={handleCheckout}
+            type="button"
             className="w-full flex justify-center font-medium text-white bg-blue py-3 px-6 rounded-md ease-out duration-200 hover:bg-blue-dark mt-7.5"
           >
             Tiến hành thanh toán

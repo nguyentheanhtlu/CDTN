@@ -13,6 +13,7 @@ import orderRoutes from './routes/order.routes';
 import blogRoutes from './routes/blog.routes';
 import categoryRoutes from './routes/category.routes';
 import uploadRoutes from './routes/upload.routes';
+import paymentRoutes from './routes/payment.routes';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import chatRoutes from './routes/chat.routes';
@@ -44,6 +45,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/category', categoryRoutes);
 app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // Basic route
 app.get('/', (req, res) => {

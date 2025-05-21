@@ -10,7 +10,7 @@ import Billing from "./Billing";
 import { useAppSelector, useAppDispatch } from "@/redux/store";
 import { selectCartItems, selectTotalPrice } from "@/redux/features/cart-slice";
 import apiService from "@/api/apiService";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 
 const Checkout = () => {
@@ -19,6 +19,7 @@ const Checkout = () => {
   const cartItems = useAppSelector(selectCartItems);
   const totalPrice = useAppSelector(selectTotalPrice);
   const [isProcessing, setIsProcessing] = useState(false);
+  const searchParams = useSearchParams();
   
   // Thêm state để lưu thông tin đơn hàng
   const [orderInfo, setOrderInfo] = useState({
@@ -66,9 +67,25 @@ const Checkout = () => {
             paymentMethod: orderInfo.paymentMethod
           };
 
-      await apiService.createOrder(payload);
-      toast.success('Đặt hàng thành công!');
-      router.push('/orders');
+      const response = await apiService.createOrder(payload);
+      
+      // Lưu thông tin đơn hàng vào localStorage
+      if (response.order) {
+        localStorage.setItem('currentOrder', JSON.stringify(response.order));
+      }
+      
+      if (orderInfo.paymentMethod === "MoMo") {
+        if (response && response.paymentUrl) {
+          // Chuyển hướng đến trang thanh toán MoMo
+          window.location.href = response.paymentUrl;
+          return;
+        } else {
+          toast.error('Không thể tạo liên kết thanh toán MoMo');
+        }
+      } else {
+        // Xử lý cho các phương thức thanh toán khác (COD)
+        toast.success('Đặt hàng thành công!');
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Đặt hàng thất bại');
     } finally {
@@ -83,6 +100,21 @@ const Checkout = () => {
       ...newInfo
     }));
   };
+
+  const resultCode = searchParams.get('resultCode');
+  const orderId = searchParams.get('orderId');
+  const message = searchParams.get('message');
+
+  if (isProcessing) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Đang xử lý thanh toán...</h1>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

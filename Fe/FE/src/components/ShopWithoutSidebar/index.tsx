@@ -1,33 +1,61 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Breadcrumb from "../Common/Breadcrumb";
-import ProductList from "../Common/ProductList";
-import { apiService } from "@/services/api.service";
-import { Product } from "@/types/product";
+import { apiService } from '@/services/api.service';
+import ProductList from '../Common/ProductList';
+import CategorySidebar from '../Shop/CategorySidebar';
+import { Product } from '@/types/product';
+import { Category } from '@/types/category';
+
 
 const ShopWithoutSidebar = () => {
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [productSidebar, setProductSidebar] = useState(false);
+  
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await apiService.getProducts();
-        setProducts(response.data);
+        const [productsRes, categoriesRes] = await Promise.all([
+          apiService.getProducts(),
+          apiService.getCategories()
+        ]);
+        setProducts(productsRes.products || []);
+        setCategories(categoriesRes);
         setError(null);
       } catch (err) {
-        setError('Failed to load products');
-        console.error('Error loading products:', err);
+        setError('Không thể tải dữ liệu cửa hàng');
+        console.error('Lỗi khi tải dữ liệu cửa hàng:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    fetchData();
   }, []);
+
+  const handleCategorySelect = async (categoryId: string | null) => {
+    try {
+      setLoading(true);
+      setSelectedCategory(categoryId);
+      const response = await apiService.getProducts(
+        categoryId ? { category: categoryId } : undefined
+      );
+      setProducts(response.products || []);
+      setError(null);
+    } catch (err) {
+      setError('Không thể tải sản phẩm cho danh mục đã chọn');
+      console.error('Lỗi khi tải sản phẩm theo danh mục:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -35,7 +63,7 @@ const ShopWithoutSidebar = () => {
         <div className="container">
           <div className="row">
             <div className="col-12">
-              <div className="text-center py-8">Loading products...</div>
+              <div className="text-center py-8">Đang tải sản phẩm...</div>
             </div>
           </div>
         </div>
@@ -60,8 +88,8 @@ const ShopWithoutSidebar = () => {
   return (
     <>
       <Breadcrumb
-        title={"Explore All Products"}
-        pages={["shop", "/", "shop without sidebar"]}
+        title={"Khám Phá Tất Cả Sản Phẩm"}
+        pages={["cửa hàng", "/", "cửa hàng không sidebar"]}
       />
       <section className="overflow-hidden relative pb-20 pt-5 lg:pt-20 xl:pt-28 bg-[#f3f4f6]">
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
@@ -71,7 +99,7 @@ const ShopWithoutSidebar = () => {
               <div className="flex items-center gap-2.5">
                 <button
                   onClick={() => setViewMode('grid')}
-                  aria-label="button for product grid view"
+                  aria-label="nút chuyển sang chế độ xem lưới"
                   className={`${
                     viewMode === 'grid'
                       ? 'bg-blue border-blue text-white'
@@ -97,7 +125,7 @@ const ShopWithoutSidebar = () => {
 
                 <button
                   onClick={() => setViewMode('list')}
-                  aria-label="button for product list view"
+                  aria-label="nút chuyển sang chế độ xem danh sách"
                   className={`${
                     viewMode === 'list'
                       ? 'bg-blue border-blue text-white'

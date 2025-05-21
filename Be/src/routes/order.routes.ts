@@ -11,6 +11,8 @@ router.use((req: any, res: any, next: any) => {
 router.post('/', orderController.createOrder);
 router.get('/my-orders', orderController.getUserOrders);
 router.get('/:id', orderController.getOrderDetail);
+router.get('/:orderId/payment-status', orderController.checkPaymentStatus);
+router.post('/:orderId/update-payment', orderController.updatePaymentStatus);
 
 // Admin routes
 router.use((req: any, res: any, next: any) => {

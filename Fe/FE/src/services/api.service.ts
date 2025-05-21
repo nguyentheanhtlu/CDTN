@@ -285,6 +285,31 @@ class ApiService {
     return response.data;
   }
 
+  async handleMoMoCallback(params: {
+    resultCode: string | null;
+    orderId: string | null;
+    message: string | null;
+    amount: string | null;
+    partnerCode: string | null;
+    requestType: string | null;
+  }) {
+    try {
+      console.log('Calling MoMo callback with params:', params);
+      const response = await this.api.get('/payment/momo/callback', { params });
+      console.log('MoMo callback response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('MoMo callback error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message,
+        config: error.config
+      });
+      throw error;
+    }
+  }
+
   // Blog APIs
   async getBlogs(params?: { page?: number; limit?: number; status?: string }) {
     const response = await this.api.get<{ blogs: Blog[]; totalPages: number; currentPage: number }>('/blogs', { params });

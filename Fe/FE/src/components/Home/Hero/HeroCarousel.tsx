@@ -31,32 +31,33 @@ const HeroCarousal = () => {
                 30%
               </span>
               <span className="block text-dark text-sm sm:text-custom-1 sm:leading-[24px]">
-                Sale
+                Giảm
                 <br />
-                Off
+                Giá
               </span>
             </div>
 
             <h1 className="font-semibold text-dark text-xl sm:text-3xl mb-3">
-              <a href="#">True Wireless Noise Cancelling Headphone</a>
+              <a href="#">Tai nghe True Wireless Chống Ồn</a>
             </h1>
 
             <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi at ipsum at risus euismod lobortis in
+              Trải nghiệm âm thanh đỉnh cao với công nghệ chống ồn thông minh, 
+              mang đến không gian âm nhạc riêng tư cho bạn.
             </p>
 
             <a
               href="#"
               className="inline-flex font-medium text-white text-custom-sm rounded-md bg-dark py-3 px-9 ease-out duration-200 hover:bg-blue mt-10"
             >
-              Shop Now
+              Mua ngay
             </a>
           </div>
 
           <div>
             <Image
               src="/images/hero/hero-01.png"
-              alt="headphone"
+              alt="Tai nghe"
               width={351}
               height={358}
             />
@@ -72,33 +73,33 @@ const HeroCarousal = () => {
                 30%
               </span>
               <span className="block text-dark text-sm sm:text-custom-1 sm:leading-[24px]">
-                Sale
+                Giảm
                 <br />
-                Off
+                Giá
               </span>
             </div>
 
             <h1 className="font-semibold text-dark text-xl sm:text-3xl mb-3">
-              <a href="#">True Wireless Noise Cancelling Headphone</a>
+              <a href="#">Tai nghe True Wireless Chống Ồn</a>
             </h1>
 
             <p>
-              Lorem ipsum dolor sit, consectetur elit nunc suscipit non ipsum
-              nec suscipit.
+              Thiết kế hiện đại, âm thanh sống động, 
+              mang đến trải nghiệm nghe nhạc tuyệt vời.
             </p>
 
             <a
               href="#"
               className="inline-flex font-medium text-white text-custom-sm rounded-md bg-dark py-3 px-9 ease-out duration-200 hover:bg-blue mt-10"
             >
-              Shop Now
+              Mua ngay
             </a>
           </div>
 
           <div>
             <Image
               src="/images/hero/hero-01.png"
-              alt="headphone"
+              alt="Tai nghe"
               width={351}
               height={358}
             />

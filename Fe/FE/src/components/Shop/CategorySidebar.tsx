@@ -15,7 +15,7 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
 }) => {
   return (
     <div className="bg-white shadow-1 rounded-lg py-4 px-5">
-      <h3 className="text-lg font-semibold mb-4">Categories</h3>
+      <h3 className="text-lg font-semibold mb-4">Thể loại</h3>
       <ul className="space-y-2">
         <li>
           <button
@@ -24,7 +24,7 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
               selectedCategory === null ? 'bg-blue-50 text-blue-600' : ''
             }`}
           >
-            All Categories
+            Tất cả danh mục
           </button>
         </li>
         {categories?.map((category) => (

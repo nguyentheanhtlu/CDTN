@@ -5,6 +5,7 @@ import { vnpay, momoConfig } from '../config/payment.config';
 import { Order } from '../models/order.model';
 import qs from 'querystring';
 import { ProductCode, VnpLocale } from 'vnpay';
+import crypto from 'crypto';
 
 interface MoMoResponse {
     payUrl: string;
@@ -86,11 +87,18 @@ export const handleVNPayReturn = async (req: Request, res: Response) => {
 // Thanh toán bằng MoMo
 export const payWithMoMo = async (req: Request, res: Response) => {
     try {
-        const { amount } = req.body;
+        const { amount, orderId } = req.body;
         const requestId = Date.now().toString();
-        const orderId = requestId;
+        const momoOrderId = requestId;
         
-        const rawSignature = `accessKey=${momoConfig.accessKey}&amount=${amount}&extraData=&ipnUrl=${momoConfig.notifyUrl}&orderId=${orderId}&orderInfo=Thanh toán đơn hàng&partnerCode=${momoConfig.partnerCode}&redirectUrl=${momoConfig.momo_ReturnUrl}&requestId=${requestId}&requestType=captureWallet`;
+        // Log config để debug
+        console.log('MoMo Config:', {
+            notifyUrl: momoConfig.notifyUrl,
+            returnUrl: momoConfig.momo_ReturnUrl,
+            frontendUrl: momoConfig.frontendReturnUrl
+        });
+        
+        const rawSignature = `accessKey=${momoConfig.accessKey}&amount=${amount}&extraData=&ipnUrl=${momoConfig.notifyUrl}&orderId=${momoOrderId}&orderInfo=Thanh toán đơn hàng&partnerCode=${momoConfig.partnerCode}&redirectUrl=${momoConfig.momo_ReturnUrl}&requestId=${requestId}&requestType=captureWallet`;
         
         const signature = createHmac('sha256', momoConfig.secretkey)
             .update(rawSignature)
@@ -101,7 +109,7 @@ export const payWithMoMo = async (req: Request, res: Response) => {
             accessKey: momoConfig.accessKey,
             requestId: requestId,
             amount: amount.toString(),
-            orderId: orderId,
+            orderId: momoOrderId,
             orderInfo: 'Thanh toán đơn hàng',
             redirectUrl: momoConfig.momo_ReturnUrl,
             ipnUrl: momoConfig.notifyUrl,
@@ -111,8 +119,17 @@ export const payWithMoMo = async (req: Request, res: Response) => {
             lang: 'vi'
         };
 
+        // Log request body để debug
+        console.log('MoMo Request Body:', requestBody);
+
         const response = await axios.post(momoConfig.endpoint, requestBody);
         const responseData = response.data as MoMoResponse;
+
+        // Cập nhật momoOrderId vào đơn hàng
+        if (orderId) {
+            await Order.findByIdAndUpdate(orderId, { momoOrderId });
+        }
+
         res.json({ paymentUrl: responseData.payUrl });
     } catch (error) {
         console.error('Lỗi thanh toán MoMo:', error);
@@ -137,13 +154,11 @@ export const handleMoMoReturn = async (req: Request, res: Response) => {
             signature
         } = req.query;
 
-      
-
-        // Tìm đơn hàng theo orderId
-        const order = await Order.findById(orderId);
+        // Tìm đơn hàng theo momoOrderId
+        const order = await Order.findOne({ momoOrderId: orderId });
       
         if (!order) {
-            console.log('Order not found with ID:', orderId);
+            console.log('Order not found with momoOrderId:', orderId);
             return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
         }
 
@@ -151,14 +166,15 @@ export const handleMoMoReturn = async (req: Request, res: Response) => {
         if (resultCode === '0') {
             // Thanh toán thành công
             order.paymentStatus = 'PAID';
-            order.orderStatus = 'PROCESSING'; // Đơn hàng đã thanh toán, chờ xử lý
+            order.orderStatus = 'PENDING'; // Đơn hàng đã thanh toán, chờ xử lý
+            order.paymentMethod = 'MoMo';  // Cập nhật phương thức thanh toán
             await order.save();
             console.log('Order updated successfully:', {
                 _id: order._id,
                 paymentStatus: order.paymentStatus,
                 orderStatus: order.orderStatus
             });
-            return res.redirect(`${process.env.MOMO_RETURN_URL || 'http://localhost:3000/payment/momo_return'}?status=success&orderId=${order._id}`);
+            return res.redirect(`${process.env.MOMO_RETURN_URL || 'http://localhost:3000/payment/momo_return'}?resultCode=0&message=Thanh%20to%C3%A1n%20th%C3%A0nh%20c%C3%B4ng&orderId=${order._id}`);
         } else {
             // Thanh toán thất bại
             order.paymentStatus = 'FAILED';
@@ -167,9 +183,60 @@ export const handleMoMoReturn = async (req: Request, res: Response) => {
                 _id: order._id,
                 paymentStatus: order.paymentStatus
             });
-            return res.redirect(`${process.env.MOMO_RETURN_URL || 'http://localhost:3000/payment/momo_return'}?status=fail&orderId=${order._id}`);
+            return res.redirect(`${process.env.MOMO_RETURN_URL || 'http://localhost:3000/payment/momo_return'}?resultCode=${resultCode}&message=${encodeURIComponent('Thanh toán thất bại')}&orderId=${order._id}`);
         }
     } catch (error) {
+        console.error('Error handling MoMo return:', error);
         res.status(500).json({ message: 'Lỗi khi xử lý callback MoMo', error });
     }
-}; 
+};
+
+// Xử lý callback từ MoMo
+export const handleMomoCallback = async (req: Request, res: Response) => {
+    try {
+        const { resultCode, orderId, message, amount, partnerCode, requestType } = req.query;
+        // Kiểm tra các tham số bắt buộc
+        if (!orderId || !resultCode) {
+            return res.status(400).json({ message: 'Thiếu thông tin cần thiết' });
+        }
+
+        // Tìm đơn hàng theo momoOrderId
+        const order = await Order.findOne({ momoOrderId: orderId });
+        if (!order) {
+            console.log('Order not found with momoOrderId:', orderId);
+            return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
+        }
+
+        // Nếu resultCode = 0 thì thanh toán thành công
+        if (resultCode === '0') {
+            order.paymentStatus = 'PAID';
+            order.orderStatus = 'PENDING';
+            order.paymentMethod = 'MoMo';
+            await order.save();
+
+            return res.json({
+                message: 'Cập nhật trạng thái thanh toán thành công',
+                order: {
+                    _id: order._id,
+                    paymentStatus: order.paymentStatus,
+                    orderStatus: order.orderStatus,
+                    paymentMethod: order.paymentMethod
+                }
+            });
+        } else {
+            order.paymentStatus = 'FAILED';
+            await order.save();
+
+            return res.status(400).json({
+                message: message || 'Thanh toán thất bại',
+                order: {
+                    _id: order._id,
+                    paymentStatus: order.paymentStatus
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error handling MoMo callback:', error);
+        res.status(500).json({ message: 'Lỗi khi xử lý callback từ MoMo', error });
+    }
+};

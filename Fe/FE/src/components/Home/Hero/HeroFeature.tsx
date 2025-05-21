@@ -4,23 +4,23 @@ import Image from "next/image";
 const featureData = [
   {
     img: "/images/icons/icon-01.svg",
-    title: "Free Shipping",
-    description: "For all orders $200",
+    title: "Miễn phí vận chuyển",
+    description: "Cho đơn hàng từ 5 triệu",
   },
   {
     img: "/images/icons/icon-02.svg",
-    title: "1 & 1 Returns",
-    description: "Cancellation after 1 day",
+    title: "Đổi trả trong 1 ngày",
+    description: "Hủy đơn sau 1 ngày",
   },
   {
     img: "/images/icons/icon-03.svg",
-    title: "100% Secure Payments",
-    description: "Gurantee secure payments",
+    title: "Thanh toán an toàn",
+    description: "Đảm bảo thanh toán an toàn",
   },
   {
     img: "/images/icons/icon-04.svg",
-    title: "24/7 Dedicated Support",
-    description: "Anywhere & anytime",
+    title: "Hỗ trợ 24/7",
+    description: "Mọi lúc mọi nơi",
   },
 ];
 
@@ -30,7 +30,7 @@ const HeroFeature = () => {
       <div className="flex flex-wrap items-center gap-7.5 xl:gap-12.5 mt-10">
         {featureData.map((item, key) => (
           <div className="flex items-center gap-4" key={key}>
-            <Image src={item.img} alt="icons" width={40} height={41} />
+            <Image src={item.img} alt="biểu tượng" width={40} height={41} />
 
             <div>
               <h3 className="font-medium text-lg text-dark">{item.title}</h3>
