@@ -390,7 +390,7 @@ const MyAccount = () => {
                       ) : (
                         <p>Chưa có địa chỉ giao hàng</p>
                       )}
-                    </div>
+                </div>
                   </div>
                 </div>
               )}
@@ -401,13 +401,13 @@ const MyAccount = () => {
                 <div className="space-y-8">
                   <div className="flex flex-row justify-between items-center gap-2 mb-2">
                     <h3 className="text-2xl font-bold">Địa chỉ của tôi</h3>
-                    <button
+                  <button
                       onClick={() => setAddressModal(true)}
                       className="px-7 py-3 bg-green-light text-white rounded-2xl hover:bg-green-700 transition-colors font-bold shadow-lg text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
                     >
                       + Thêm địa chỉ mới
-                    </button>
-                  </div>
+                  </button>
+                </div>
                   <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-3 justify-items-center">
                     {addresses.map((address) => (
                       <div
@@ -460,87 +460,87 @@ const MyAccount = () => {
               {activeTab === "account-details" && (
                 <div className="bg-white rounded-xl shadow-1 p-4 sm:p-7.5">
                   <h2 className="text-2xl font-bold mb-4">Thông tin tài khoản</h2>
-                  <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       <div>
                         <label className="block text-sm font-medium mb-2">Họ</label>
-                        <input
-                          type="text"
-                          name="firstName"
-                          value={formData.firstName}
-                          onChange={handleInputChange}
+                      <input
+                        type="text"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
                           className="w-full px-4 py-2 border rounded-md"
                           required
-                        />
-                      </div>
+                      />
+                    </div>
                       <div>
                         <label className="block text-sm font-medium mb-2">Tên</label>
-                        <input
-                          type="text"
-                          name="lastName"
-                          value={formData.lastName}
-                          onChange={handleInputChange}
+                      <input
+                        type="text"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleInputChange}
                           className="w-full px-4 py-2 border rounded-md"
                           required
-                        />
-                      </div>
+                      />
+                    </div>
                       <div>
                         <label className="block text-sm font-medium mb-2">Số điện thoại</label>
                         <input
                           type="tel"
                           name="phone"
                           value={formData.phone}
-                          onChange={handleInputChange}
+                        onChange={handleInputChange}
                           className="w-full px-4 py-2 border rounded-md"
                         />
-                      </div>
                     </div>
+                  </div>
 
                     <h3 className="text-xl font-semibold mb-4 mt-8">Đổi mật khẩu</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-2">Mật khẩu hiện tại</label>
-                        <input
-                          type="password"
-                          name="oldPassword"
-                          value={formData.oldPassword}
-                          onChange={handleInputChange}
+                    <input
+                      type="password"
+                      name="oldPassword"
+                      value={formData.oldPassword}
+                      onChange={handleInputChange}
                           className="w-full px-4 py-2 border rounded-md"
-                        />
-                      </div>
+                    />
+                  </div>
                       <div>
                         <label className="block text-sm font-medium mb-2">Mật khẩu mới</label>
-                        <input
-                          type="password"
-                          name="newPassword"
-                          value={formData.newPassword}
-                          onChange={handleInputChange}
+                    <input
+                      type="password"
+                      name="newPassword"
+                      value={formData.newPassword}
+                      onChange={handleInputChange}
                           className="w-full px-4 py-2 border rounded-md"
-                        />
-                      </div>
+                    />
+                  </div>
                       <div>
                         <label className="block text-sm font-medium mb-2">Xác nhận mật khẩu mới</label>
-                        <input
-                          type="password"
-                          name="confirmNewPassword"
-                          value={formData.confirmNewPassword}
-                          onChange={handleInputChange}
+                    <input
+                      type="password"
+                      name="confirmNewPassword"
+                      value={formData.confirmNewPassword}
+                      onChange={handleInputChange}
                           className="w-full px-4 py-2 border rounded-md"
-                        />
-                      </div>
-                    </div>
+                    />
+                  </div>
+                </div>
 
                     <div className="mt-6">
-                      <button
-                        type="submit"
+                  <button
+                    type="submit"
                         disabled={loading}
                         className="bg-blue text-white px-6 py-2 rounded-md hover:bg-blue-dark disabled:opacity-50"
-                      >
+                  >
                         {loading ? 'Đang cập nhật...' : 'Cập nhật thông tin'}
-                      </button>
-                    </div>
-                  </form>
+                  </button>
                 </div>
+              </form>
+            </div>
               )}
             </div>
           </div>

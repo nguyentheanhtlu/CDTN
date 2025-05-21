@@ -147,7 +147,7 @@ const Header = () => {
         {/* <!-- header top start --> */}
         <div
           className={`flex flex-col lg:flex-row gap-5 items-end lg:items-center xl:justify-between ease-out duration-200 ${stickyMenu ? "py-4" : "py-6"}`}
-          style={{ marginLeft: -130 }}
+          style={{ marginLeft: -200 }}
         >
           {/* <!-- header top left --> */}
           <div className="xl:w-auto flex-col sm:flex-row w-full flex sm:justify-between sm:items-center gap-5 sm:gap-10">
@@ -237,7 +237,7 @@ const Header = () => {
                   HỖ TRỢ 24/7
                 </span>
                 <p className="font-medium text-custom-sm text-dark">
-                  (+84) 981-632302
+                  (+84)981-632302
                 </p>
               </div>
             </div>
@@ -383,7 +383,7 @@ const Header = () => {
                       giỏ hàng
                     </span>
                     <p className="font-medium text-custom-sm text-dark">
-                      ${totalAmount}
+                      {totalAmount.toLocaleString('vi-VN')} VNĐ
                     </p>
                   </div>
                 </button>

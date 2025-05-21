@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from "@/redux/store";
 import SingleItem from "./SingleItem";
 import Breadcrumb from "../Common/Breadcrumb";
 import Link from "next/link";
-import { fetchCart, selectCartItems, selectCartLoading, selectCartError } from "@/redux/features/cart-slice";
+import { fetchCart, selectCartItems, selectCartLoading, selectCartError, clearCart } from "@/redux/features/cart-slice";
 import toast from "react-hot-toast";
 
 const Cart = () => {
@@ -24,6 +24,15 @@ const Cart = () => {
       toast.error(error);
     }
   }, [error]);
+
+  const handleClearCart = async () => {
+    try {
+      await dispatch(clearCart());
+      toast.success('Đã xóa tất cả sản phẩm khỏi giỏ hàng');
+    } catch (error) {
+      toast.error('Không thể xóa giỏ hàng');
+    }
+  };
 
   if (loading) {
     return (
@@ -45,7 +54,12 @@ const Cart = () => {
           <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
             <div className="flex flex-wrap items-center justify-between gap-5 mb-7.5">
               <h2 className="font-medium text-dark text-2xl">Giỏ hàng của bạn</h2>
-              <button className="text-blue">Xóa giỏ hàng</button>
+              <button 
+                onClick={handleClearCart}
+                className="text-blue hover:text-red transition-colors duration-200"
+              >
+                Xóa giỏ hàng
+              </button>
             </div>
 
             <div className="bg-white rounded-[10px] shadow-1">

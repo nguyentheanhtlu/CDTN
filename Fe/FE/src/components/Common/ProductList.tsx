@@ -19,16 +19,9 @@ const ProductList = ({ products, viewMode = 'grid' }: ProductListProps) => {
 
   return (
     <div className={`product-list ${viewMode === 'list' ? 'list-view' : 'grid-view'}`}>
-      <div className="row">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {products?.map((product) => (
-          <div
-            key={product._id}
-            className={`col-12 ${
-              viewMode === 'list' ? 'col-lg-12' : 'col-sm-6 col-lg-4'
-            }`}
-          >
-            <ProductItem item={product} viewMode={viewMode} />
-          </div>
+          <ProductItem key={product._id} item={product} viewMode={viewMode} />
         ))}
       </div>
     </div>

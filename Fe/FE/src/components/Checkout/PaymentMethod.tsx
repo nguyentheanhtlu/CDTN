@@ -47,18 +47,6 @@ const PaymentMethod: React.FC<PaymentMethodProps> = ({ orderInfo, updateOrderInf
           <input
             type="radio"
             name="paymentMethod"
-            value="VNPay"
-            checked={orderInfo.paymentMethod === "VNPay"}
-            onChange={handlePaymentMethodChange}
-            className="mr-2"
-          />
-          Thanh toán qua VNPay
-        </label>
-
-        <label className="flex items-center">
-          <input
-            type="radio"
-            name="paymentMethod"
             value="MoMo"
             checked={orderInfo.paymentMethod === "MoMo"}
             onChange={handlePaymentMethodChange}

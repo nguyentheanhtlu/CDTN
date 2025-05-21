@@ -207,7 +207,37 @@ const apiService = {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
     }
-  }
+  },
+
+  // Thêm method get
+  get: async (url: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_BASE_URL}${url}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Thêm method post
+  post: async (url: string, data: any) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API_BASE_URL}${url}`, data, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 export default apiService; 

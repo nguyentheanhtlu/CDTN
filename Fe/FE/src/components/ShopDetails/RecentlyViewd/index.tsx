@@ -18,7 +18,7 @@ const RecentlyViewdItems = () => {
       try {
         setLoading(true);
         const response = await apiService.getProducts();
-        setProducts(response.data);
+        setProducts(response);
         setError(null);
       } catch (err) {
         setError('Failed to load recently viewed products');
@@ -114,7 +114,7 @@ const RecentlyViewdItems = () => {
           spaceBetween={20}
           className="justify-between"
         >
-          {products.map((item) => (
+          {products?.products?.map((item) => (
             <SwiperSlide key={item._id}>
               <ProductItem item={item} />
             </SwiperSlide>

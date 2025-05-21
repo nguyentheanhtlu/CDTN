@@ -138,7 +138,7 @@ const CartSidebarModal = () => {
           <div className="border-t border-gray-3 bg-white pt-5 pb-4 sm:pb-7.5 lg:pb-11 mt-7.5 sticky bottom-0">
             <div className="flex items-center justify-between gap-5 mb-6">
               <p className="font-medium text-xl text-dark">Tổng tiền:</p>
-              <p className="font-medium text-xl text-dark">${totalAmount}</p>
+              <p className="font-medium text-xl text-dark">{totalAmount.toLocaleString('vi-VN')} VNĐ</p>
             </div>
 
             <div className="flex items-center gap-4">

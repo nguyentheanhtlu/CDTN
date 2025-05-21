@@ -31,6 +31,7 @@ export interface IOrder extends Document {
         message: string;
     };
     vnp_TxnRef?: string;
+    momoOrderId?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -91,6 +92,10 @@ const orderSchema = new Schema<IOrder>({
         default: null
     },
     vnp_TxnRef: {
+        type: String,
+        default: null
+    },
+    momoOrderId: {
         type: String,
         default: null
     }

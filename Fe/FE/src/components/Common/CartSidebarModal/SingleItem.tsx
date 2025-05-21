@@ -48,7 +48,7 @@ const SingleItem = ({ item }: { item: CartItem }) => {
           <h3 className="font-medium text-dark mb-1 ease-out duration-200 hover:text-blue">
             <a href="#"> {item.product?.name || 'Product'} </a>
           </h3>
-          <p className="text-custom-sm">Giá: ${item.price}</p>
+          <p className="text-custom-sm">Giá: {item.price.toLocaleString('vi-VN')} VNĐ</p>
           <p className="text-custom-sm">Số lượng: {item.quantity}</p>
         </div>
       </div>
