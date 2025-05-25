@@ -19,6 +19,7 @@ import { Server } from 'socket.io';
 import chatRoutes from './routes/chat.routes';
 import { ChatService } from './services/chat.service';
 import chatbotRoutes from './routes/chatbot.routes';
+import adminRoutes from './routes/admin.routes'
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -35,6 +36,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 configurePassport();
 
 // Routes
+app.use('/api/admin', adminRoutes)
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
