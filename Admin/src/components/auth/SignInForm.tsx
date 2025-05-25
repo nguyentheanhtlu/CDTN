@@ -8,6 +8,8 @@ import Link from "next/link";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import ApiSignIn from "../../api/login";
+import { useAppDispatch } from "@/lib/hooks";
+import { setToken } from "@/lib/features/auth/authSlice";
 
 export default function SignInForm() {
 
@@ -21,6 +23,7 @@ export default function SignInForm() {
     password: "",
     fullName: ""
   });
+  const dispatch = useAppDispatch()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +37,7 @@ export default function SignInForm() {
         if (role === "admin") {
           localStorage.setItem('token', response.data.token);
           window.location.href = "http://localhost:3000/";
+          setToken(response.data.token)
         } else if (role === "customer") {
           window.location.href = "http://localhost:3001/";
         } else {
@@ -114,12 +118,12 @@ export default function SignInForm() {
                   <Label>
                     Email <span className="text-error-500">*</span>{" "}
                   </Label>
-                  <Input 
-                    placeholder="info@gmail.com" 
+                  <Input
+                    placeholder="info@gmail.com"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    required 
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
                   />
                 </div>
                 <div>
@@ -131,7 +135,7 @@ export default function SignInForm() {
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
                       value={formData.password}
-                      onChange={(e) => setFormData({...formData, password: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       required
                     />
                     <span
