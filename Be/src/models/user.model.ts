@@ -64,8 +64,7 @@ const userSchema = new Schema<IUser>({
     phone: String,
     address: String,
     avatar: {
-        type: String,
-        default: 'default-avatar.png'
+        type: String
     },
     googleId: String,
     isVerified: {
