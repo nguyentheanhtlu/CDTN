@@ -50,6 +50,16 @@ export const cart = createSlice({
     },
     clearCart: (state) => {
       state.cart = null;
+    },
+    updateItemQuantity: (state, action: PayloadAction<{ itemId: string; quantity: number }>) => {
+      if (state.cart) {
+        const item = state.cart.items.find(item => item._id === action.payload.itemId);
+        if (item) {
+          item.quantity = action.payload.quantity;
+          // Cập nhật tổng tiền
+          state.cart.totalAmount = state.cart.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+        }
+      }
     }
   },
 });
@@ -79,11 +89,25 @@ export const fetchCart = () => async (dispatch: any) => {
   }
 };
 
-export const addToCart = (productId: string, quantity: number = 1) => async (dispatch: any) => {
+export const addToCart = (productId: string, quantity: number = 1) => async (dispatch: any, getState: () => RootState) => {
   try {
     dispatch(setLoading(true));
-    await apiService.addToCart(productId, quantity);
-    // After adding, fetch the updated cart
+    const state = getState();
+    const cart = state.cartReducer.cart;
+    
+    // Kiểm tra xem sản phẩm đã có trong giỏ hàng chưa
+    const existingItem = cart?.items.find(item => item.product._id === productId);
+    
+    if (existingItem) {
+      // Nếu sản phẩm đã tồn tại, cập nhật số lượng
+      const newQuantity = existingItem.quantity + quantity;
+      await apiService.updateCartItemQuantity(existingItem._id, newQuantity);
+    } else {
+      // Nếu sản phẩm chưa tồn tại, thêm mới
+      await apiService.addToCart(productId, quantity);
+    }
+    
+    // Sau khi thêm/cập nhật, lấy lại giỏ hàng mới nhất
     const cartResponse = await apiService.getCart();
     dispatch(setCart(cartResponse));
     dispatch(setError(null));
@@ -111,5 +135,5 @@ export const removeItemFromCart = (itemId: string) => async (dispatch: any) => {
   }
 };
 
-export const { setCart, setLoading, setError, clearCart } = cart.actions;
+export const { setCart, setLoading, setError, clearCart, updateItemQuantity } = cart.actions;
 export default cart.reducer;

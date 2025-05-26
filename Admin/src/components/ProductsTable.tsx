@@ -168,60 +168,60 @@ export function ProductsTable() {
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
       <div className="flex justify-between items-center p-4 border-b border-gray-100 dark:border-white/[0.05]">
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">Products Management</h2>
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">Quản lý sản phẩm</h2>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline">Add Product</Button>
+            <Button variant="outline">Thêm sản phẩm</Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px] bg-white dark:bg-gray-800">
             <DialogHeader>
-              <DialogTitle className="text-xl font-semibold">Add New Product</DialogTitle>
+              <DialogTitle className="text-xl font-semibold">Thêm sản phẩm mới</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <label htmlFor="name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Product Name
+                  Tên sản phẩm
                 </label>
                 <Input
                   id="name"
-                  placeholder="Enter product name"
+                  placeholder="Nhập tên sản phẩm"
                   value={newProduct.name || ''}
                   onChange={(e: ChangeEvent<HTMLInputElement>) => setNewProduct({ ...newProduct, name: e.target.value })}
                 />
               </div>
               <div className="grid gap-2">
                 <label htmlFor="description" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Description
+                  Mô tả
                 </label>
                 <Textarea
                   id="description"
-                  placeholder="Enter product description"
+                  placeholder="Nhập mô tả sản phẩm"
                   value={newProduct.description || ''}
                   onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
                 />
               </div>
               <div className="grid gap-2">
                 <label htmlFor="price" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Price
+                  Giá
                 </label>
                 <Input
                   id="price"
                   type="number"
-                  placeholder="Enter price"
+                  placeholder="Nhập giá"
                   value={newProduct.price || ''}
                   onChange={(e) => setNewProduct({ ...newProduct, price: parseFloat(e.target.value) })}
                 />
               </div>
               <div className="grid gap-2">
                 <label htmlFor="category" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Category
+                  Danh mục
                 </label>
                 <Select
                   value={newProduct.category}
                   onValueChange={(value) => setNewProduct({ ...newProduct, category: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
+                    <SelectValue placeholder="Chọn danh mục" />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => (
@@ -234,19 +234,19 @@ export function ProductsTable() {
               </div>
               <div className="grid gap-2">
                 <label htmlFor="stock" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Stock
+                  Số lượng
                 </label>
                 <Input
                   id="stock"
                   type="number"
-                  placeholder="Enter stock quantity"
+                  placeholder="Nhập số lượng"
                   value={newProduct.stock || ''}
                   onChange={(e) => setNewProduct({ ...newProduct, stock: parseInt(e.target.value, 10) })}
                 />
               </div>
               <div className="grid gap-2">
                 <label htmlFor="images" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Product Images
+                  Hình ảnh sản phẩm
                 </label>
                 <input
                   id="images"
@@ -260,9 +260,9 @@ export function ProductsTable() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                Cancel
+                Hủy
               </Button>
-              <Button onClick={handleAddProduct}>Save Product</Button>
+              <Button onClick={handleAddProduct}>Lưu sản phẩm</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -272,53 +272,53 @@ export function ProductsTable() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[425px] bg-white dark:bg-gray-800">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">Edit Product</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">Chỉnh sửa sản phẩm</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <label htmlFor="edit-name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Product Name
+                Tên sản phẩm
               </label>
               <Input
                 id="edit-name"
-                placeholder="Enter product name"
+                placeholder="Nhập tên sản phẩm"
                 value={editingProduct?.name || ''}
                 onChange={(e) => setEditingProduct(editingProduct ? { ...editingProduct, name: e.target.value } : null)}
               />
             </div>
             <div className="grid gap-2">
               <label htmlFor="edit-description" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Description
+                Mô tả
               </label>
               <Textarea
                 id="edit-description"
-                placeholder="Enter product description"
+                placeholder="Nhập mô tả sản phẩm"
                 value={editingProduct?.description || ''}
                 onChange={(e) => setEditingProduct(editingProduct ? { ...editingProduct, description: e.target.value } : null)}
               />
             </div>
             <div className="grid gap-2">
               <label htmlFor="edit-price" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Price
+                Giá
               </label>
               <Input
                 id="edit-price"
                 type="number"
-                placeholder="Enter price"
+                placeholder="Nhập giá"
                 value={editingProduct?.price || ''}
                 onChange={(e) => setEditingProduct(editingProduct ? { ...editingProduct, price: parseFloat(e.target.value) } : null)}
               />
             </div>
             <div className="grid gap-2">
               <label htmlFor="edit-category" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Category
+                Danh mục
               </label>
               <Select
                 value={editingProduct?.category}
                 onValueChange={(value) => setEditingProduct(editingProduct ? { ...editingProduct, category: value } : null)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a category" />
+                  <SelectValue placeholder="Chọn danh mục" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((category) => (
@@ -331,19 +331,19 @@ export function ProductsTable() {
             </div>
             <div className="grid gap-2">
               <label htmlFor="edit-stock" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Stock
+                Số lượng
               </label>
               <Input
                 id="edit-stock"
                 type="number"
-                placeholder="Enter stock quantity"
+                placeholder="Nhập số lượng"
                 value={editingProduct?.stock || ''}
                 onChange={(e) => setEditingProduct(editingProduct ? { ...editingProduct, stock: parseInt(e.target.value, 10) } : null)}
               />
             </div>
             <div className="grid gap-2">
               <label htmlFor="edit-images" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Product Images
+                Hình ảnh sản phẩm
               </label>
               <input
                 id="edit-images"
@@ -373,9 +373,9 @@ export function ProductsTable() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
+              Hủy
             </Button>
-            <Button onClick={handleEditProduct}>Save Changes</Button>
+            <Button onClick={handleEditProduct}>Lưu thay đổi</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -384,19 +384,19 @@ export function ProductsTable() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px] bg-white dark:bg-gray-800">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">Confirm Delete</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">Xác nhận xóa</DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <p className="text-gray-700 dark:text-gray-300">
-              Are you sure you want to delete this product? This action cannot be undone.
+              Bạn có chắc chắn muốn xóa sản phẩm này? Hành động này không thể hoàn tác.
             </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Cancel
+              Hủy
             </Button>
             <Button variant="destructive" onClick={handleConfirmDelete}>
-              Delete
+              Xóa
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -408,22 +408,22 @@ export function ProductsTable() {
             <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
               <TableRow>
                 <TableCell className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                  Product
+                  Sản phẩm
                 </TableCell>
                 <TableCell className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                  Category
+                  Danh mục
                 </TableCell>
                 <TableCell className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                  Price
+                  Giá
                 </TableCell>
                 <TableCell className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                  Stock
+                  Số lượng
                 </TableCell>
                 <TableCell className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                  Status
+                  Trạng thái
                 </TableCell>
                 <TableCell className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">
-                  Actions
+                  Thao tác
                 </TableCell>
               </TableRow>
             </TableHeader>
@@ -446,7 +446,7 @@ export function ProductsTable() {
                                   width={40}
                                   height={40}
                                   src={image}
-                                  alt={`${product.name} - Image ${index + 1}`}
+                                  alt={`${product.name} - Ảnh ${index + 1}`}
                                   className="object-cover"
                                 />
                               </div>
@@ -475,14 +475,15 @@ export function ProductsTable() {
                     {categories.find(c => c._id === product.category)?.name || product.category}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    ${product.price}
+                    {product.price.toLocaleString('vi-VN')}đ
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     {product.stock}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-start">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(product.status)}`}>
-                      {product.status}
+                      {product.status === 'In Stock' ? 'Còn hàng' : 
+                       product.status === 'Low Stock' ? 'Sắp hết hàng' : 'Hết hàng'}
                     </span>
                   </TableCell>
                   <TableCell className="px-4 py-3">
@@ -493,14 +494,14 @@ export function ProductsTable() {
                         className="text-blue-600 hover:text-blue-700"
                         onClick={() => handleStartEdit(product)}
                       >
-                        Edit
+                        Sửa
                       </Button>
                       <Button
                         variant="destructive"
                         size="sm"
                         onClick={() => handleStartDelete(product._id)}
                       >
-                        Delete
+                        Xóa
                       </Button>
                     </div>
                   </TableCell>

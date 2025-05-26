@@ -11,6 +11,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import Link from "next/link";
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 interface ProductItemProps {
   item: Product;
@@ -20,6 +21,7 @@ interface ProductItemProps {
 const ProductItem = ({ item, viewMode = 'grid' }: ProductItemProps) => {
   const { openModal } = useModalContext();
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
 
   // Get the first preview image or use a fallback
   const previewImage = item.images && item.images.length > 0 ? item.images[0] : '/images/placeholder.png';
@@ -41,8 +43,27 @@ const ProductItem = ({ item, viewMode = 'grid' }: ProductItemProps) => {
     toast.success('Added to wishlist');
   };
 
-  const handleProductDetails = () => {
-    dispatch(updateproductDetails(item));
+  const handleProductDetail = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(`http://localhost:5000/api/products/${item._id}`);
+      if (!response.ok) throw new Error('Failed to fetch product details');
+      const productDetail = await response.json();
+      
+      // Lưu vào localStorage trước
+      localStorage.setItem('productDetails', JSON.stringify(productDetail));
+      
+      // Sau đó dispatch vào Redux
+      dispatch(updateproductDetails(productDetail));
+      
+      // Đợi một chút để đảm bảo Redux đã cập nhật
+      setTimeout(() => {
+        window.location.href = `/products/${item._id}`;
+      }, 100);
+    } catch (error) {
+      console.error('Error fetching product details:', error);
+      toast.error('Không thể tải thông tin sản phẩm');
+    }
   };
 
   const hasDiscount = item.discount > 0;
@@ -53,7 +74,7 @@ const ProductItem = ({ item, viewMode = 'grid' }: ProductItemProps) => {
   return (
     <div className={`product-item  rounded-2xl shadow-lg p-5 flex flex-col items-center transition hover:shadow-2xl ${viewMode === 'list' ? 'list-view' : 'grid-view'}`}>
       <div className="relative w-full flex flex-col items-center justify-center min-h-[220px]">
-        <Link href={`/products/${item._id}`} className="block w-full">
+        <Link href={`/products/${item._id}`} className="block w-full" onClick={handleProductDetail}>
           <Image
             src={previewImage}
             alt={item.name}
@@ -101,12 +122,16 @@ const ProductItem = ({ item, viewMode = 'grid' }: ProductItemProps) => {
       <div className="flex-1 flex flex-col justify-between w-full mt-4">
         <div className="flex items-center gap-1 mb-1 justify-center">
           {[...Array(5)].map((_, index) => (
-            <i
+            <span
               key={index}
-              className={`fas fa-star text-yellow-400 ${index < Math.round(item.averageRating || 0) ? 'opacity-100' : 'opacity-30'}`}
-            ></i>
+              className={`text-lg ${
+                index < Math.round(item.averageRating || 0) ? 'text-yellow-light' : 'text-gray-200'
+              }`}
+            >
+              ★
+            </span>
           ))}
-          <span className="text-xs text-gray-500 ml-1">( {Array.isArray(item.reviews) ? item.reviews.length : (item.reviewCount || 0)} )</span>
+          <span className="text-xs text-gray-500 ml-1">({Array.isArray(item.reviews) ? item.reviews.length : (item.reviewCount || 0)})</span>
         </div>
         <h3 className="product-title font-semibold text-base leading-tight mb-2 min-h-[40px] text-center text-gray-900">
           <Link href={`/product/${item._id}`}>{item.name}</Link>

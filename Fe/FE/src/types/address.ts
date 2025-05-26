@@ -1,9 +1,10 @@
 export interface Address {
-  fullName: string;
+  _id?: string;
+  name: string;
   phone: string;
-  province: string;
-  district: string;
+  addressLine: string;
   ward: string;
-  street: string;
+  district: string;
+  province: string;
   isDefault?: boolean;
 } 

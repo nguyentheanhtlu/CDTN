@@ -152,6 +152,18 @@ const apiService = {
     }
   },
 
+  updateCartItemQuantity: async (itemId: string, quantity: number): Promise<Cart> => {
+    try {
+      const response = await axiosInstance.put(`/cart/items/${itemId}`, {
+        quantity: quantity
+      });
+      return response.data.cart;
+    } catch (error) {
+      console.error('Error updating cart item quantity:', error);
+      throw error;
+    }
+  },
+
   removeFromCart: async (productId: string): Promise<Cart> => {
     try {
       const response = await axiosInstance.delete(`/cart/${productId}`);
@@ -235,6 +247,58 @@ const apiService = {
       });
       return response;
     } catch (error) {
+      throw error;
+    }
+  },
+
+  // Product Reviews
+  reviewProduct: async (productId: string, data: { rating: number; comment?: string }): Promise<Product> => {
+    try {
+      const response = await axiosInstance.post(`/products/${productId}/review`, data);
+      return response.data.product;
+    } catch (error) {
+      console.error('Error reviewing product:', error);
+      throw error;
+    }
+  },
+
+  updateProductReview: async (productId: string, data: { rating: number; comment?: string }): Promise<Product> => {
+    try {
+      const response = await axiosInstance.put(`/products/${productId}/review`, data);
+      return response.data.product;
+    } catch (error) {
+      console.error('Error updating product review:', error);
+      throw error;
+    }
+  },
+
+  deleteProductReview: async (productId: string): Promise<Product> => {
+    try {
+      const response = await axiosInstance.delete(`/products/${productId}/review`);
+      return response.data.product;
+    } catch (error) {
+      console.error('Error deleting product review:', error);
+      throw error;
+    }
+  },
+
+  getProductReviews: async (productId: string, rating?: number): Promise<{
+    reviews: Array<{
+      user: string;
+      rating: number;
+      comment?: string;
+      createdAt: string;
+    }>;
+    total: number;
+    averageRating: number;
+  }> => {
+    try {
+      const response = await axiosInstance.get(`/products/${productId}/reviews`, {
+        params: { rating }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error getting product reviews:', error);
       throw error;
     }
   },

@@ -163,7 +163,7 @@ export const handleMoMoReturn = async (req: Request, res: Response) => {
         }
 
         // Kiểm tra kết quả giao dịch
-        if (resultCode === '0') {
+        if (resultCode == '0') {
             // Thanh toán thành công
             order.paymentStatus = 'PAID';
             order.orderStatus = 'PENDING'; // Đơn hàng đã thanh toán, chờ xử lý

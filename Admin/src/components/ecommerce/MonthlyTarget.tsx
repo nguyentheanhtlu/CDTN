@@ -5,15 +5,110 @@ import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { MoreDotIcon } from "@/icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
+import axios from 'axios';
+import { Loader2 } from "lucide-react";
+
 // Dynamically import the ReactApexChart component
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
+interface Order {
+  _id: string;
+  totalAmount: number;
+  paymentStatus: string;
+  createdAt: string;
+}
+
 export default function MonthlyTarget() {
-  const series = [75.55];
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const MONTHLY_TARGET = 20000000; // 20 triệu VND
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setIsLoading(true);
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        const response = await axios.get('http://localhost:5000/api/orders', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        setOrders(response.data.orders);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred while fetching orders');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
+
+  // Calculate monthly target progress
+  const calculateTargetProgress = () => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+
+    const monthlyRevenue = orders.reduce((total, order) => {
+      const orderDate = new Date(order.createdAt);
+      if (orderDate.getMonth() === currentMonth && 
+          orderDate.getFullYear() === currentYear && 
+          order.paymentStatus === 'PAID') {
+        return total + order.totalAmount;
+      }
+      return total;
+    }, 0);
+
+    return (monthlyRevenue / MONTHLY_TARGET) * 100;
+  };
+
+  // Calculate today's revenue
+  const calculateTodayRevenue = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return orders.reduce((total, order) => {
+      const orderDate = new Date(order.createdAt);
+      orderDate.setHours(0, 0, 0, 0);
+      
+      if (orderDate.getTime() === today.getTime() && 
+          order.orderStatus === 'DELIVERED') {
+        return total + order.totalAmount;
+      }
+      return total;
+    }, 0);
+  };
+
+  // Calculate monthly revenue
+  const calculateMonthlyRevenue = () => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+
+    return orders.reduce((total, order) => {
+      const orderDate = new Date(order.createdAt);
+      if (orderDate.getMonth() === currentMonth && 
+          orderDate.getFullYear() === currentYear && 
+          order.orderStatus === 'DELIVERED') {
+        return total + order.totalAmount;
+      }
+      return total;
+    }, 0);
+  };
+
+  const series = [calculateTargetProgress()];
   const options: ApexOptions = {
     colors: ["#465FFF"],
     chart: {
@@ -34,7 +129,7 @@ export default function MonthlyTarget() {
         track: {
           background: "#E4E7EC",
           strokeWidth: "100%",
-          margin: 5, // margin is in pixels
+          margin: 5,
         },
         dataLabels: {
           name: {
@@ -46,7 +141,7 @@ export default function MonthlyTarget() {
             offsetY: -40,
             color: "#1D2939",
             formatter: function (val) {
-              return val + "%";
+              return val.toFixed(1) + "%";
             },
           },
         },
@@ -62,8 +157,6 @@ export default function MonthlyTarget() {
     labels: ["Progress"],
   };
 
-  const [isOpen, setIsOpen] = useState(false);
-
   function toggleDropdown() {
     setIsOpen(!isOpen);
   }
@@ -72,16 +165,40 @@ export default function MonthlyTarget() {
     setIsOpen(false);
   }
 
+  if (isLoading) {
+    return (
+      <div className="rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="flex items-center justify-center h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="flex items-center justify-center h-[400px]">
+          <p className="text-red-500">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const todayRevenue = calculateTodayRevenue();
+  const monthlyRevenue = calculateMonthlyRevenue();
+  const targetProgress = calculateTargetProgress();
+
   return (
     <div className="rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-white/[0.03]">
       <div className="px-5 pt-5 bg-white shadow-default rounded-2xl pb-11 dark:bg-gray-900 sm:px-6 sm:pt-6">
         <div className="flex justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-              Monthly Target
+              Mục tiêu hàng tháng
             </h3>
             <p className="mt-1 font-normal text-gray-500 text-theme-sm dark:text-gray-400">
-              Target you’ve set for each month
+              Mục tiêu bạn đã đặt cho mỗi tháng
             </p>
           </div>
           <div className="relative inline-block">
@@ -98,14 +215,14 @@ export default function MonthlyTarget() {
                 onItemClick={closeDropdown}
                 className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
               >
-                View More
+                Xem thêm
               </DropdownItem>
               <DropdownItem
                 tag="a"
                 onItemClick={closeDropdown}
                 className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
               >
-                Delete
+                Xóa
               </DropdownItem>
             </Dropdown>
           </div>
@@ -121,22 +238,22 @@ export default function MonthlyTarget() {
           </div>
 
           <span className="absolute left-1/2 top-full -translate-x-1/2 -translate-y-[95%] rounded-full bg-success-50 px-3 py-1 text-xs font-medium text-success-600 dark:bg-success-500/15 dark:text-success-500">
-            +10%
+            {targetProgress > 100 ? '+' : ''}{((targetProgress - 100) / 100 * 100).toFixed(1)}%
           </span>
         </div>
         <p className="mx-auto mt-10 w-full max-w-[380px] text-center text-sm text-gray-500 sm:text-base">
-          You earn $3287 today, it&apos;s higher than last month. Keep up your
-          good work!
+          Bạn kiếm được {todayRevenue.toLocaleString('vi-VN')}đ hôm nay, cao hơn tháng trước. Hãy tiếp tục phát huy!
         </p>
       </div>
 
       <div className="flex items-center justify-center gap-5 px-6 py-3.5 sm:gap-8 sm:py-5">
         <div>
           <p className="mb-1 text-center text-gray-500 text-theme-xs dark:text-gray-400 sm:text-sm">
-            Target
+            Mục tiêu
           </p>
           <p className="flex items-center justify-center gap-1 text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
-            $20K
+            <span>{MONTHLY_TARGET.toLocaleString('vi-VN')}</span>
+            <span>đ</span>
             <svg
               width="16"
               height="16"
@@ -158,10 +275,11 @@ export default function MonthlyTarget() {
 
         <div>
           <p className="mb-1 text-center text-gray-500 text-theme-xs dark:text-gray-400 sm:text-sm">
-            Revenue
+            Doanh thu
           </p>
           <p className="flex items-center justify-center gap-1 text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
-            $20K
+            <span>{monthlyRevenue.toLocaleString('vi-VN')}</span>
+            <span>đ</span>
             <svg
               width="16"
               height="16"
@@ -183,10 +301,11 @@ export default function MonthlyTarget() {
 
         <div>
           <p className="mb-1 text-center text-gray-500 text-theme-xs dark:text-gray-400 sm:text-sm">
-            Today
+            Hôm nay
           </p>
           <p className="flex items-center justify-center gap-1 text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
-            $20K
+            <span>{todayRevenue.toLocaleString('vi-VN')}</span>
+            <span>đ</span>
             <svg
               width="16"
               height="16"

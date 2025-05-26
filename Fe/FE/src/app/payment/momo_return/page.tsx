@@ -16,12 +16,6 @@ export default function MoMoReturn() {
                 const orderId = searchParams.get('orderId');
                 const message = searchParams.get('message');
 
-                console.log('MoMo return params:', {
-                    resultCode,
-                    orderId,
-                    message
-                });
-
                 if (resultCode === '0') {
                     toast.success('Thanh toán thành công!');
                     router.push('/my-account');

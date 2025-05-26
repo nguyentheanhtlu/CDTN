@@ -87,9 +87,12 @@ const BestSeller = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7.5">
           {/* <!-- Best Sellers item --> */}
-          {products.products.slice(0, 6).map((item) => (
-            <SingleItem item={item} key={item._id} />
-          ))}
+          {products.products
+            .sort((a, b) => b.sold - a.sold)
+            .slice(0, 6)
+            .map((item) => (
+              <SingleItem item={item} key={item._id} />
+            ))}
         </div>
 
         <div className="text-center mt-12.5">

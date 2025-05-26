@@ -1,21 +1,13 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { apiService } from '@/services/api';
+import apiService from '@/services/api';
 import { toast } from 'react-toastify';
+import { Address } from '@/types/address';
 
 interface AddressModalProps {
   onClose: () => void;
   onSuccess: () => void;
-  address?: {
-    _id: string;
-    name: string;
-    phone: string;
-    addressLine: string;
-    ward: string;
-    district: string;
-    province: string;
-    isDefault: boolean;
-  };
+  address?: Address;
 }
 
 const AddressModal: React.FC<AddressModalProps> = ({ onClose, onSuccess, address }) => {

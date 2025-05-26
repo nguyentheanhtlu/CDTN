@@ -12,14 +12,19 @@ export interface Order {
   user: string;
   items: OrderItem[];
   totalAmount: number;
+  shippingFee: number;
+  discountAmount: number;
+  finalAmount: number;
   shippingAddress: Address;
   paymentMethod: 'COD' | 'VNPay' | 'MoMo';
-  paymentStatus: 'pending' | 'paid' | 'failed';
-  orderStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  voucher?: {
+  paymentStatus: 'PENDING' | 'PAID' | 'FAILED';
+  orderStatus: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+  appliedVouchers: {
     type: 'discount' | 'free_shipping';
     value: number;
-  };
+    discountAmount: number;
+    message?: string;
+  }[];
   createdAt: string;
   updatedAt: string;
 } 

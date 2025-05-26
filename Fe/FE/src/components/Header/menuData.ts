@@ -79,50 +79,6 @@ export const menuData: Menu[] = [
         newTab: false,
         path: "/contact",
       },
-      {
-        id: 62,
-        title: "Lỗi",
-        newTab: false,
-        path: "/error",
-      },
-      {
-        id: 63,
-        title: "Gửi tin nhắn thành công",
-        newTab: false,
-        path: "/mail-success",
-      },
-    ],
-  },
-  {
-    id: 7,
-    title: "Bài viết",
-    newTab: false,
-    path: "/",
-    submenu: [
-      {
-        id: 71,
-        title: "Bài viết có thanh bên",
-        newTab: false,
-        path: "/blogs/blog-grid-with-sidebar",
-      },
-      {
-        id: 72,
-        title: "Danh sách bài viết",
-        newTab: false,
-        path: "/blogs/blog-grid",
-      },
-      {
-        id: 73,
-        title: "Chi tiết bài viết có thanh bên",
-        newTab: false,
-        path: "/blogs/blog-details-with-sidebar",
-      },
-      {
-        id: 74,
-        title: "Chi tiết bài viết",
-        newTab: false,
-        path: "/blogs/blog-details",
-      },
     ],
   },
 ];
