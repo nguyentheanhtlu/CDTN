@@ -38,38 +38,18 @@ const SingleItem = ({ item }: { item: Product }) => {
         <div className="text-center px-4 py-7.5">
           <div className="flex items-center justify-center gap-2.5 mb-2">
             <div className="flex items-center gap-1">
-              <Image
-                src="/images/icons/icon-star.svg"
-                alt="star icon"
-                width={14}
-                height={14}
-              />
-              <Image
-                src="/images/icons/icon-star.svg"
-                alt="star icon"
-                width={14}
-                height={14}
-              />
-              <Image
-                src="/images/icons/icon-star.svg"
-                alt="star icon"
-                width={14}
-                height={14}
-              />
-              <Image
-                src="/images/icons/icon-star.svg"
-                alt="star icon"
-                width={14}
-                height={14}
-              />
-              <Image
-                src="/images/icons/icon-star.svg"
-                alt="star icon"
-                width={14}
-                height={14}
-              />
+              {[...Array(5)].map((_, index) => (
+                <span
+                  key={index}
+                  className={`text-lg ${
+                    index < Math.round(item.averageRating || 0) ? 'text-yellow-light' : 'text-gray-200'
+                  }`}
+                >
+                  ★
+                </span>
+              ))}
             </div>
-            <p className="text-custom-sm">({item.reviewCount})</p>
+            <p className="text-custom-sm">({item.reviewCount || 0})</p>
           </div>
 
           <h3 className="font-medium text-dark ease-out duration-200 hover:text-blue mb-1.5">

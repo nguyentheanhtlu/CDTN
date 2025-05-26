@@ -131,22 +131,30 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderItem }) => {
 
       <div className="border-t pt-4">
         <div className="flex justify-between items-center">
-          <span className="text-gray-500">Tạm tính</span>
+          <span className="text-gray-500">Tổng tiền hàng</span>
           <span>{orderItem.totalAmount.toLocaleString('vi-VN')}đ</span>
         </div>
-        {orderItem.voucher && (
-          <div className="flex justify-between items-center mt-2">
-            <span className="text-gray-500">Giảm giá</span>
-            <span className="text-green-600">
-              {orderItem.voucher.type === 'discount' 
-                ? `-${orderItem.voucher.value.toLocaleString('vi-VN')}đ` 
-                : 'Miễn phí vận chuyển'}
-            </span>
-          </div>
+        {orderItem.appliedVouchers && orderItem.appliedVouchers.length > 0 && (
+          <>
+            {orderItem.appliedVouchers
+              .filter(voucher => voucher.type === 'discount')
+              .map((voucher, index) => (
+                <div key={index} className="flex justify-between items-center mt-2">
+                  <span className="text-gray-500">Giảm giá</span>
+                  <span className="text-green-600">
+                    -{voucher.discountAmount.toLocaleString('vi-VN')}đ
+                  </span>
+                </div>
+              ))}
+          </>
         )}
+        <div className="flex justify-between items-center mt-2">
+          <span className="text-gray-500">Phí vận chuyển</span>
+          <span>{orderItem.shippingFee === 0 ? 'Miễn phí' : `${orderItem.shippingFee.toLocaleString('vi-VN')}đ`}</span>
+        </div>
         <div className="flex justify-between items-center mt-4 font-medium text-lg">
           <span>Tổng cộng</span>
-          <span>{orderItem.totalAmount.toLocaleString('vi-VN')}đ</span>
+          <span>{orderItem.finalAmount.toLocaleString('vi-VN')}đ</span>
         </div>
       </div>
     </div>

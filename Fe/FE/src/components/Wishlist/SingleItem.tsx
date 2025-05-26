@@ -24,7 +24,7 @@ const SingleItem = ({ item }) => {
       <div className="min-w-[83px]">
         <button
           onClick={() => handleRemoveFromWishlist()}
-          aria-label="button for remove product from wishlist"
+          aria-label="nút xóa sản phẩm khỏi danh sách yêu thích"
           className="flex items-center justify-center rounded-lg max-w-[38px] w-full h-9.5 bg-gray-2 border border-gray-3 ease-out duration-200 hover:bg-red-light-6 hover:border-red-light-4 hover:text-red"
         >
           <svg
@@ -49,7 +49,7 @@ const SingleItem = ({ item }) => {
         <div className="max-w-[83px] w-full h-[83px]">
           <Image
             src={item.images[0]}
-            alt="product"
+            alt="sản phẩm"
             width={83}
             height={83}
             className="w-full h-full object-cover"
@@ -64,11 +64,11 @@ const SingleItem = ({ item }) => {
       </div>
 
       <div className="min-w-[205px]">
-        <p className="text-dark">${item.price}</p>
+        <p className="text-dark">{item.price.toLocaleString('vi-VN')} VNĐ</p>
       </div>
 
       <div className="min-w-[265px]">
-        <p className="text-dark">In Stock</p>
+        <p className="text-dark">Còn hàng</p>
       </div>
 
       <div className="min-w-[150px] text-right">
@@ -76,7 +76,7 @@ const SingleItem = ({ item }) => {
           onClick={() => handleAddToCart()}
           className="inline-block text-blue hover:text-dark"
         >
-          Add to Cart
+          Thêm vào giỏ
         </button>
       </div>
     </div>

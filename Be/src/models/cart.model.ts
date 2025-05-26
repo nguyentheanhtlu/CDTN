@@ -3,6 +3,7 @@ import { IProduct } from './product.model';
 import { IUser } from './user.model';
 
 interface CartItem {
+    _id?: mongoose.Types.ObjectId;
     product: IProduct['_id'];
     quantity: number;
     price: number;

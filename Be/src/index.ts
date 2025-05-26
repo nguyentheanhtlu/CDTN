@@ -72,7 +72,6 @@ const io = new Server(httpServer, {
 
 // Khởi tạo ChatService
 new ChatService(io);
-
 // Sử dụng httpServer thay vì app.listen
 httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

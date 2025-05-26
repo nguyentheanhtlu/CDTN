@@ -12,6 +12,7 @@ router.use((req: any, res: any, next: any) => {
 router.get('/', cartController.getCart);
 router.post('/add', cartController.addToCart);
 router.put('/update', cartController.updateCartItem);
+router.put('/items/:itemId', cartController.updateCartItemQuantity);
 router.delete('/:productId', cartController.removeFromCart);
 
 export default router; 

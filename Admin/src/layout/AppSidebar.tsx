@@ -23,19 +23,14 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
-    name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/", pro: false }],
+    name: "Bảng điều khiển",
+    subItems: [{ name: "Thương mại điện tử", path: "/", pro: false }],
   },
   {
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/calendar",
-  },
-  {
-    name: "Tables",
+    name: "Bảng",
     icon: <TableIcon />,
-    subItems: [{ name: "User", path: "/basic-tables", pro: false },
-              {name : "Products" , path : "/products" , pro: false}
+    subItems: [{ name: "Người dùng", path: "/basic-tables", pro: false },
+              {name : "Sản phẩm" , path : "/products" , pro: false}
     ],
   },
 

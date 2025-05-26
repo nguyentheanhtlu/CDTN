@@ -8,10 +8,20 @@ interface OrderItem {
     price: number;
 }
 
+interface AppliedVoucher {
+    type: 'discount' | 'free_shipping';
+    value: number;
+    discountAmount: number;
+    message?: string;
+}
+
 export interface IOrder extends Document {
     user: IUser['_id'];
     items: OrderItem[];
     totalAmount: number;
+    shippingFee: number;
+    discountAmount: number;
+    finalAmount: number;
     shippingAddress: {
         name: string;
         phone: string;
@@ -24,12 +34,7 @@ export interface IOrder extends Document {
     paymentMethod: 'COD' | 'BANK_TRANSFER' | 'VNPay' | 'MoMo';
     paymentStatus: 'PENDING' | 'PAID' | 'FAILED';
     orderStatus: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
-    appliedVoucher?: {
-        type: 'discount' | 'free_shipping';
-        value?: number;
-        discountAmount?: number;
-        message: string;
-    };
+    appliedVouchers: AppliedVoucher[];
     vnp_TxnRef?: string;
     momoOrderId?: string;
     createdAt: Date;
@@ -63,6 +68,20 @@ const orderSchema = new Schema<IOrder>({
         type: Number,
         required: true
     },
+    shippingFee: {
+        type: Number,
+        required: true,
+        default: 0
+    },
+    discountAmount: {
+        type: Number,
+        required: true,
+        default: 0
+    },
+    finalAmount: {
+        type: Number,
+        required: true
+    },
     shippingAddress: {
         name: { type: String, required: true },
         phone: { type: String, required: true },
@@ -87,10 +106,24 @@ const orderSchema = new Schema<IOrder>({
         enum: ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'],
         default: 'PENDING'
     },
-    appliedVoucher: {
-        type: Object,
-        default: null
-    },
+    appliedVouchers: [{
+        type: {
+            type: String,
+            enum: ['discount', 'free_shipping'],
+            required: true
+        },
+        value: {
+            type: Number,
+            required: true
+        },
+        discountAmount: {
+            type: Number,
+            required: true
+        },
+        message: {
+            type: String
+        }
+    }],
     vnp_TxnRef: {
         type: String,
         default: null

@@ -29,11 +29,37 @@ export class ChatController {
       const count = await Message.countDocuments({
         receiver: userId,
         isRead: false
-      });
-
+      }); 
       res.json({ unreadCount: count });
     } catch (error) {
       res.status(500).json({ message: 'Error fetching unread count' });
+    }
+  }
+
+  // Send new message
+  async sendMessage(req: any, res: any) {
+    try {
+      const { senderId, receiverId, content } = req.body;
+
+      if (!senderId || !receiverId || !content) {
+        return res.status(400).json({ message: 'Missing required fields' });
+      }
+
+      const message = await Message.create({
+        sender: senderId,
+        receiver: receiverId,
+        content,
+        timestamp: new Date(),
+        isRead: false
+      });
+
+      // Populate sender and receiver details
+      await message.populate('sender', 'name email');
+      await message.populate('receiver', 'name email');
+
+      res.status(201).json(message);
+    } catch (error) {
+      res.status(500).json({ message: 'Error sending message' });
     }
   }
 }

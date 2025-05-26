@@ -2,6 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 export interface IVoucher {
+    _id?: string; // MongoDB's _id field
     type: 'discount' | 'free_shipping'; // loại voucher
     value: number; // giá trị giảm giá (phần trăm hoặc số tiền)
     status: 'active' | 'used' | 'expired';
@@ -9,6 +10,7 @@ export interface IVoucher {
 }
 
 export interface IUserAddress {
+    _id?: string;
     name: string;
     phone: string;
     addressLine: string;

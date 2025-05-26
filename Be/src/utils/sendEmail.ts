@@ -39,7 +39,11 @@ export const sendOrderConfirmationEmail = async (order: any, userEmail: string, 
                         <p><strong>Mã đơn hàng:</strong> ${order._id}</p>
                         <p><strong>Ngày đặt:</strong> ${new Date(order.createdAt).toLocaleString('vi-VN')}</p>
                         <p><strong>Phương thức thanh toán:</strong> ${order.paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng' : order.paymentMethod}</p>
-                        <p><strong>Địa chỉ giao hàng:</strong> ${order.shippingAddress}</p>
+                        <p><strong>Địa chỉ giao hàng:</strong></p>
+                        <p>${order.shippingAddress.name}</p>
+                        <p>${order.shippingAddress.phone}</p>
+                        <p>${order.shippingAddress.addressLine}</p>
+                        <p>${order.shippingAddress.ward}, ${order.shippingAddress.district}, ${order.shippingAddress.province}</p>
                     </div>
 
                     <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
@@ -57,8 +61,26 @@ export const sendOrderConfirmationEmail = async (order: any, userEmail: string, 
                         </tbody>
                         <tfoot>
                             <tr>
+                                <td colspan="4" style="padding: 10px; text-align: right;"><strong>Tổng tiền hàng:</strong></td>
+                                <td style="padding: 10px;">${order.totalAmount.toLocaleString('vi-VN')}đ</td>
+                            </tr>
+                            ${order.discountAmount > 0 ? `
+                                <tr>
+                                    <td colspan="4" style="padding: 10px; text-align: right;"><strong>Giảm giá:</strong></td>
+                                    <td style="padding: 10px; color: #28a745;">-${order.discountAmount.toLocaleString('vi-VN')}đ</td>
+                                </tr>
+                            ` : ''}
+                            <tr>
+                                <td colspan="4" style="padding: 10px; text-align: right;"><strong>Phí vận chuyển:</strong></td>
+                                <td style="padding: 10px;">
+                                    ${order.appliedVouchers?.some((v: any) => v.type === 'free_shipping') 
+                                        ? '<span style="color: #28a745;">Miễn phí</span>' 
+                                        : '30.000đ'}
+                                </td>
+                            </tr>
+                            <tr style="border-top: 2px solid #eee;">
                                 <td colspan="4" style="padding: 10px; text-align: right;"><strong>Tổng cộng:</strong></td>
-                                <td style="padding: 10px;"><strong>${order.totalAmount.toLocaleString('vi-VN')}đ</strong></td>
+                                <td style="padding: 10px;"><strong>${order.finalAmount.toLocaleString('vi-VN')}đ</strong></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -67,7 +89,7 @@ export const sendOrderConfirmationEmail = async (order: any, userEmail: string, 
                         <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0;">
                             <p style="color: #856404; margin: 0;">
                                 <strong>Lưu ý:</strong> Đơn hàng của bạn sẽ được thanh toán khi nhận hàng. 
-                                Vui lòng chuẩn bị đủ số tiền ${order.totalAmount.toLocaleString('vi-VN')}đ khi nhận hàng.
+                                Vui lòng chuẩn bị đủ số tiền ${order.finalAmount.toLocaleString('vi-VN')}đ khi nhận hàng.
                             </p>
                         </div>
                     ` : ''}

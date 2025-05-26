@@ -20,7 +20,10 @@ const Checkout = () => {
   const totalPrice = useAppSelector(selectTotalPrice);
   const [isProcessing, setIsProcessing] = useState(false);
   const searchParams = useSearchParams();
-  
+  const [selectedVoucherIds, setSelectedVoucherIds] = useState<string[]>([]);
+  const [shippingFee, setShippingFee] = useState(30000); // Phí vận chuyển mặc định
+  const [hasFreeShipping, setHasFreeShipping] = useState(false);
+  const [totalDiscount, setTotalDiscount] = useState(0);
   // Thêm state để lưu thông tin đơn hàng
   const [orderInfo, setOrderInfo] = useState({
     useSavedAddress: false,
@@ -33,8 +36,11 @@ const Checkout = () => {
       district: "",
       province: ""
     },
-    paymentMethod: "COD"
+    paymentMethod: "COD" as "COD" | "MoMo"  // Chỉ cho phép 2 phương thức thanh toán
   });
+
+  // Tính tổng tiền cuối cùng bao gồm phí vận chuyển và giảm giá
+  const finalTotal = totalPrice + (hasFreeShipping ? 0 : shippingFee) - totalDiscount;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,40 +60,22 @@ const Checkout = () => {
 
     try {
       setIsProcessing(true);
-      // Tạo payload dựa trên useSavedAddress
-      const payload = orderInfo.useSavedAddress 
-        ? {
-            useSavedAddress: true,
-            savedAddressIndex: orderInfo.savedAddressIndex,
-            paymentMethod: orderInfo.paymentMethod
-          }
-        : {
-            useSavedAddress: false,
-            shippingAddress: orderInfo.shippingAddress,
-            paymentMethod: orderInfo.paymentMethod
-          };
+      const payload = {
+        ...orderInfo,
+        voucherIds: selectedVoucherIds
+      };
 
       const response = await apiService.createOrder(payload);
       
-      // Lưu thông tin đơn hàng vào localStorage
-      if (response.order) {
-        localStorage.setItem('currentOrder', JSON.stringify(response.order));
-      }
-      
-      if (orderInfo.paymentMethod === "MoMo") {
-        if (response && response.paymentUrl) {
-          // Chuyển hướng đến trang thanh toán MoMo
-          window.location.href = response.paymentUrl;
-          return;
-        } else {
-          toast.error('Không thể tạo liên kết thanh toán MoMo');
-        }
+      if (response.paymentUrl) {
+        window.location.href = response.paymentUrl;
       } else {
-        // Xử lý cho các phương thức thanh toán khác (COD)
         toast.success('Đặt hàng thành công!');
+        router.push('/my-account');
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Đặt hàng thất bại');
+      toast.error('Có lỗi xảy ra khi đặt hàng');
+      console.error('Error creating order:', error);
     } finally {
       setIsProcessing(false);
     }
@@ -99,6 +87,16 @@ const Checkout = () => {
       ...prev,
       ...newInfo
     }));
+  };
+
+  const handleVoucherSelect = (voucherIds: string[]) => {
+    setSelectedVoucherIds(voucherIds);
+    // Kiểm tra xem có voucher miễn phí vận chuyển không
+    const hasFreeShippingVoucher = voucherIds.some(id => {
+      // TODO: Cần thay thế bằng logic thực tế kiểm tra loại voucher
+      return id.includes('free_shipping');
+    });
+    setHasFreeShipping(hasFreeShippingVoucher);
   };
 
   const resultCode = searchParams.get('resultCode');
@@ -128,10 +126,10 @@ const Checkout = () => {
                 {/* <!-- đăng nhập --> */}
 
                 {/* <!-- thông tin thanh toán --> */}
-                <Billing 
+                {/* <Billing 
                   orderInfo={orderInfo}
                   updateOrderInfo={updateOrderInfo}
-                />
+                /> */}
 
                 {/* <!-- địa chỉ giao hàng --> */}
                 <Shipping 
@@ -200,9 +198,25 @@ const Checkout = () => {
                         <p className="text-dark">Phí vận chuyển</p>
                       </div>
                       <div>
-                        <p className="text-dark text-right">0đ</p>
+                        <p className="text-dark text-right">
+                          {hasFreeShipping ? 'Miễn phí' : '30.000đ'}
+                        </p>
                       </div>
                     </div>
+
+                    {/* <!-- giảm giá --> */}
+                    {totalDiscount > 0 && (
+                      <div className="flex items-center justify-between py-5 border-b border-gray-3">
+                        <div>
+                          <p className="text-dark">Giảm giá</p>
+                        </div>
+                        <div>
+                          <p className="text-dark text-right text-green-600">
+                            -{totalDiscount.toLocaleString('vi-VN')}đ
+                          </p>
+                        </div>
+                      </div>
+                    )}
 
                     {/* <!-- tổng cộng --> */}
                     <div className="flex items-center justify-between pt-5">
@@ -211,7 +225,7 @@ const Checkout = () => {
                       </div>
                       <div>
                         <p className="font-medium text-lg text-dark text-right">
-                          {totalPrice.toLocaleString('vi-VN')}đ
+                          {finalTotal.toLocaleString('vi-VN')}đ
                         </p>
                       </div>
                     </div>
@@ -219,10 +233,10 @@ const Checkout = () => {
                 </div>
 
                 {/* <!-- mã giảm giá --> */}
-                <Coupon />
+                <Coupon onVoucherSelect={handleVoucherSelect} />
 
                 {/* <!-- phương thức vận chuyển --> */}
-                <ShippingMethod />
+                {/* <ShippingMethod /> */}
 
                 {/* <!-- phương thức thanh toán --> */}
                 <PaymentMethod 

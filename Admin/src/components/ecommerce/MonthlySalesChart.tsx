@@ -3,15 +3,72 @@ import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
 import { MoreDotIcon } from "@/icons";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
+import axios from 'axios';
+import { Loader2 } from "lucide-react";
 
 // Dynamically import the ReactApexChart component
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
+interface Order {
+  _id: string;
+  totalAmount: number;
+  status: string;
+  createdAt: string;
+}
+
 export default function MonthlySalesChart() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setIsLoading(true);
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        const response = await axios.get('http://localhost:5000/api/orders', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        setOrders(response.data.orders);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred while fetching orders');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
+  console.log(orders);
+  // Calculate monthly sales from completed orders
+  const calculateMonthlySales = () => {
+    const monthlySales = new Array(12).fill(0);
+    
+    orders.forEach(order => {
+      if (order.orderStatus === 'DELIVERED') {
+        const date = new Date(order.createdAt);
+        const month = date.getMonth(); // 0-11
+        monthlySales[month] += order.totalAmount;
+      }
+    });
+
+    return monthlySales;
+  };
+
   const options: ApexOptions = {
     colors: ["#465fff"],
     chart: {
@@ -40,18 +97,18 @@ export default function MonthlySalesChart() {
     },
     xaxis: {
       categories: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
+        "Th1",
+        "Th2",
+        "Th3",
+        "Th4",
+        "Th5",
+        "Th6",
+        "Th7",
+        "Th8",
+        "Th9",
+        "Th10",
+        "Th11",
+        "Th12",
       ],
       axisBorder: {
         show: false,
@@ -81,23 +138,22 @@ export default function MonthlySalesChart() {
     fill: {
       opacity: 1,
     },
-
     tooltip: {
       x: {
         show: false,
       },
       y: {
-        formatter: (val: number) => `${val}`,
+        formatter: (val: number) => `${val.toLocaleString('vi-VN')}đ`,
       },
     },
   };
+
   const series = [
     {
-      name: "Sales",
-      data: [168, 385, 201, 298, 187, 195, 291, 110, 215, 390, 280, 112],
+      name: "Doanh số",
+      data: calculateMonthlySales(),
     },
   ];
-  const [isOpen, setIsOpen] = useState(false);
 
   function toggleDropdown() {
     setIsOpen(!isOpen);
@@ -107,11 +163,31 @@ export default function MonthlySalesChart() {
     setIsOpen(false);
   }
 
+  if (isLoading) {
+    return (
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
+        <div className="flex items-center justify-center h-[300px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
+        <div className="flex items-center justify-center h-[300px]">
+          <p className="text-red-500">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-          Monthly Sales
+          Doanh số hàng tháng
         </h3>
 
         <div className="relative inline-block">
@@ -127,13 +203,13 @@ export default function MonthlySalesChart() {
               onItemClick={closeDropdown}
               className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
             >
-              View More
+              Xem thêm
             </DropdownItem>
             <DropdownItem
               onItemClick={closeDropdown}
               className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
             >
-              Delete
+              Xóa
             </DropdownItem>
           </Dropdown>
         </div>

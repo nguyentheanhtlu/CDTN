@@ -49,9 +49,13 @@ interface OrderItem {
 }
 
 interface ShippingAddress {
-  address: string;
-  city: string;
+  name: string;
   phone: string;
+  addressLine: string;
+  ward: string;
+  district: string;
+  province: string;
+  isNewAddress: boolean;
 }
 
 interface User {
@@ -67,7 +71,7 @@ interface Order {
   items: OrderItem[];
   totalAmount: number;
   paymentMethod: string;
-  paymentStatus: "PENDING" | "COMPLETED" | "FAILED";
+  paymentStatus: "PENDING" | "PAID" | "FAILED";
   orderStatus: "PENDING" | "PROCESSING" | "DELIVERED" | "CANCELED";
   appliedVoucher: string | null;
   vnp_TxnRef: string | null;
@@ -241,17 +245,17 @@ export default function RecentOrders() {
       <div className="mb-6 flex justify-between">
         <div>
           <h4 className="text-xl font-semibold text-black dark:text-white">
-            Orders Management
+            Quản lý đơn hàng
           </h4>
           <p className="mt-1 text-sm font-medium text-gray-600 dark:text-gray-400">
-            Manage and track customer orders
+            Quản lý và theo dõi đơn hàng của khách hàng
           </p>
         </div>
       </div>
 
       {isLoading ? (
         <div className="flex justify-center items-center py-8">
-          <p className="text-gray-600 dark:text-gray-400">Loading orders...</p>
+          <p className="text-gray-600 dark:text-gray-400">Đang tải đơn hàng...</p>
         </div>
       ) : error ? (
         <div className="flex justify-center items-center py-8">
@@ -259,7 +263,7 @@ export default function RecentOrders() {
         </div>
       ) : orders.length === 0 ? (
         <div className="flex justify-center items-center py-8">
-          <p className="text-gray-600 dark:text-gray-400">No orders found</p>
+          <p className="text-gray-600 dark:text-gray-400">Không tìm thấy đơn hàng nào</p>
         </div>
       ) : (
         <>
@@ -268,19 +272,19 @@ export default function RecentOrders() {
               <TableHeader className="bg-gray-50 dark:bg-boxdark-2 border-t border-stroke dark:border-strokedark">
                 <TableRow>
                   <TableCell className="py-4 px-4 font-medium text-black dark:text-white">
-                    Order Info
+                    Thông tin đơn hàng
                   </TableCell>
                   <TableCell className="py-4 px-4 font-medium text-black dark:text-white">
-                    Customer
+                    Khách hàng
                   </TableCell>
                   <TableCell className="py-4 px-4 font-medium text-black dark:text-white">
-                    Total
+                    Tổng tiền
                   </TableCell>
                   <TableCell className="py-4 px-4 font-medium text-black dark:text-white">
-                    Status
+                    Trạng thái
                   </TableCell>
                   <TableCell className="py-4 px-4 font-medium text-black dark:text-white">
-                    Actions
+                    Thao tác
                   </TableCell>
                 </TableRow>
               </TableHeader>
@@ -300,7 +304,7 @@ export default function RecentOrders() {
                         </div>
                         <div>
                           <h5 className="font-medium text-black dark:text-white">
-                            Order #{order._id.slice(-6)}
+                            Đơn hàng #{order._id.slice(-6)}
                           </h5>
                           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                             {new Date(order.createdAt).toLocaleDateString()}
@@ -317,11 +321,14 @@ export default function RecentOrders() {
                       </div>
                     </TableCell>
                     <TableCell className="py-5 px-4">
-                      <p className="text-black dark:text-white font-medium">${order.totalAmount.toFixed(2)}</p>
+                      <p className="text-black dark:text-white font-medium">{order.totalAmount.toLocaleString('vi-VN')}đ</p>
                     </TableCell>
                     <TableCell className="py-5 px-4">
                       <Badge color={getStatusColor(order.orderStatus)}>
-                        {order.orderStatus}
+                        {order.orderStatus === "PENDING" ? "Chờ xử lý" :
+                         order.orderStatus === "PROCESSING" ? "Đang xử lý" :
+                         order.orderStatus === "DELIVERED" ? "Đã giao" :
+                         "Đã hủy"}
                       </Badge>
                     </TableCell>
                     <TableCell className="py-5 px-4">
@@ -335,7 +342,7 @@ export default function RecentOrders() {
                           }}
                           className="border-primary text-primary  dark:border-primary dark:text-primary dark:hover:bg-primary"
                         >
-                          View Details
+                          Xem chi tiết
                         </Button>
                         <Button
                           variant="outline" 
@@ -346,7 +353,7 @@ export default function RecentOrders() {
                           }}
                           className="border-primary text-primary  dark:border-primary dark:text-primary dark:hover:bg-primary"
                         >
-                          Update Status
+                          Cập nhật trạng thái
                         </Button>
                       </div>
                     </TableCell>
@@ -360,7 +367,7 @@ export default function RecentOrders() {
           <div className="flex items-center justify-between border-t border-stroke dark:border-strokedark px-4 py-3 sm:px-6 mt-4">
             <div className="flex items-center gap-2">
               <p className="text-sm text-gray-700 dark:text-gray-400">
-                Show
+                Hiển thị
                 <select
                   className="mx-2 rounded border border-stroke dark:border-strokedark bg-transparent px-2 py-1 text-gray-700 dark:text-gray-400 hover:border-primary dark:hover:border-primary focus:border-primary dark:focus:border-primary focus:outline-none"
                   value={pageSize}
@@ -371,10 +378,10 @@ export default function RecentOrders() {
                   <option value={20}>20</option>
                   <option value={50}>50</option>
                 </select>
-                entries
+                mục
               </p>
               <p className="text-sm text-gray-700 dark:text-gray-400">
-                Showing {startIndex + 1} to {Math.min(endIndex, totalOrders)} of {totalOrders} entries
+                Hiển thị {startIndex + 1} đến {Math.min(endIndex, totalOrders)} trong tổng số {totalOrders} mục
               </p>
             </div>
             
@@ -471,39 +478,49 @@ export default function RecentOrders() {
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
         <DialogContent className="bg-white dark:bg-boxdark">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-black dark:text-white">Order Details</DialogTitle>
+            <DialogTitle className="text-xl font-semibold text-black dark:text-white">Chi tiết đơn hàng</DialogTitle>
           </DialogHeader>
           {selectedOrder && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-black dark:text-white mb-3">Order Information</h3>
+                <h3 className="text-lg font-semibold text-black dark:text-white mb-3">Thông tin đơn hàng</h3>
                 <div className="space-y-2 text-gray-600 dark:text-gray-400">
-                  <p>Order ID: <span className="text-black dark:text-white">#{selectedOrder._id.slice(-6)}</span></p>
-                  <p>Date: <span className="text-black dark:text-white">{new Date(selectedOrder.createdAt).toLocaleString()}</span></p>
-                  <p>Payment Method: <span className="text-black dark:text-white">{selectedOrder.paymentMethod}</span></p>
-                  <p>Payment Status: 
-                    <Badge color={selectedOrder.paymentStatus === "COMPLETED" ? "success" : "warning"}>
-                      {selectedOrder.paymentStatus}
+                  <p>Mã đơn hàng: <span className="text-black dark:text-white">#{selectedOrder._id.slice(-6)}</span></p>
+                  <p>Ngày đặt: <span className="text-black dark:text-white">{new Date(selectedOrder.createdAt).toLocaleString()}</span></p>
+                  <p>Phương thức thanh toán: <span className="text-black dark:text-white">{selectedOrder.paymentMethod}</span></p>
+                  <p>Trạng thái thanh toán: 
+                    <Badge color={selectedOrder.paymentStatus === "PAID" ? "success" : "warning"}>
+                      {selectedOrder.paymentStatus === "PAID" ? "Đã thanh toán" :
+                       selectedOrder.paymentStatus === "PENDING" ? "Chờ thanh toán" :
+                       "Thanh toán thất bại"}
                     </Badge>
                   </p>
-                  <p>Order Status: 
+                  <p>Trạng thái đơn hàng: 
                     <Badge color={getStatusColor(selectedOrder.orderStatus)}>
-                      {selectedOrder.orderStatus}
+                      {selectedOrder.orderStatus === "PENDING" ? "Chờ xử lý" :
+                       selectedOrder.orderStatus === "PROCESSING" ? "Đang xử lý" :
+                       selectedOrder.orderStatus === "DELIVERED" ? "Đã giao" :
+                       "Đã hủy"}
                     </Badge>
                   </p>
                 </div>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-black dark:text-white mb-3">Customer Information</h3>
+                <h3 className="text-lg font-semibold text-black dark:text-white mb-3">Thông tin khách hàng</h3>
                 <div className="space-y-2 text-gray-600 dark:text-gray-400">
-                  <p>Name: <span className="text-black dark:text-white">{selectedOrder.user.fullName}</span></p>
+                  <p>Tên: <span className="text-black dark:text-white">{selectedOrder.user.fullName}</span></p>
                   <p>Email: <span className="text-black dark:text-white">{selectedOrder.user.email}</span></p>
-                  <p>Phone: <span className="text-black dark:text-white">{selectedOrder.shippingAddress.phone}</span></p>
-                  <p>Address: <span className="text-black dark:text-white">{selectedOrder.shippingAddress.address}, {selectedOrder.shippingAddress.city}</span></p>
+                  <p>Tên người nhận: <span className="text-black dark:text-white">{selectedOrder.shippingAddress?.name || 'Chưa có tên'}</span></p>
+                  <p>Số điện thoại: <span className="text-black dark:text-white">{selectedOrder.shippingAddress?.phone || 'Chưa có số điện thoại'}</span></p>
+                  <p>Địa chỉ: <span className="text-black dark:text-white">
+                    {selectedOrder.shippingAddress ? 
+                      `${selectedOrder.shippingAddress.addressLine}, ${selectedOrder.shippingAddress.ward}, ${selectedOrder.shippingAddress.district}, ${selectedOrder.shippingAddress.province}` 
+                      : 'Chưa có địa chỉ'}
+                  </span></p>
                 </div>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-black dark:text-white mb-3">Products</h3>
+                <h3 className="text-lg font-semibold text-black dark:text-white mb-3">Sản phẩm</h3>
                 <div className="space-y-4">
                   {selectedOrder.items.map((item) => (
                     <div key={item._id} className="flex items-center gap-4 p-3 rounded-lg border border-stroke dark:border-strokedark">
@@ -517,7 +534,7 @@ export default function RecentOrders() {
                       <div>
                         <p className="font-medium text-black dark:text-white">{item.product.name}</p>
                         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                          {item.quantity} x ${item.price.toFixed(2)}
+                          {item.quantity} x {item.price.toLocaleString('vi-VN')}đ
                         </p>
                       </div>
                     </div>
@@ -525,8 +542,8 @@ export default function RecentOrders() {
                 </div>
               </div>
               <div className="flex justify-between items-center pt-4 border-t border-stroke dark:border-strokedark">
-                <h3 className="text-lg font-semibold text-black dark:text-white">Total Amount</h3>
-                <p className="text-xl font-semibold text-black dark:text-white">${selectedOrder.totalAmount.toFixed(2)}</p>
+                <h3 className="text-lg font-semibold text-black dark:text-white">Tổng tiền</h3>
+                <p className="text-xl font-semibold text-black dark:text-white">{selectedOrder.totalAmount.toLocaleString('vi-VN')}đ</p>
               </div>
             </div>
           )}
@@ -536,7 +553,7 @@ export default function RecentOrders() {
               onClick={() => setDetailsDialogOpen(false)}
               className="border-primary text-primary  dark:border-primary dark:text-primary dark:hover:bg-primary"
             >
-              Close
+              Đóng
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -551,14 +568,17 @@ export default function RecentOrders() {
       }}>
         <DialogContent className="bg-white dark:bg-boxdark">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-black dark:text-white">Update Order Status</DialogTitle>
+            <DialogTitle className="text-xl font-semibold text-black dark:text-white">Cập nhật trạng thái đơn hàng</DialogTitle>
           </DialogHeader>
           {selectedOrder && (
             <div className="space-y-6">
               <div className="space-y-2">
-                <p className="text-gray-600 dark:text-gray-400">Current Status: 
+                <p className="text-gray-600 dark:text-gray-400">Trạng thái hiện tại: 
                   <Badge color={getStatusColor(selectedOrder.orderStatus)}>
-                    {selectedOrder.orderStatus}
+                    {selectedOrder.orderStatus === "PENDING" ? "Chờ xử lý" :
+                     selectedOrder.orderStatus === "PROCESSING" ? "Đang xử lý" :
+                     selectedOrder.orderStatus === "DELIVERED" ? "Đã giao" :
+                     "Đã hủy"}
                   </Badge>
                 </p>
                 <Select
@@ -569,13 +589,13 @@ export default function RecentOrders() {
                   disabled={isUpdating}
                 >
                   <SelectTrigger className="w-full border-stroke dark:border-strokedark">
-                    <SelectValue placeholder="Select new status" />
+                    <SelectValue placeholder="Chọn trạng thái mới" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="PENDING">Pending</SelectItem>
-                    <SelectItem value="PROCESSING">Processing</SelectItem>
-                    <SelectItem value="DELIVERED">Delivered</SelectItem>
-                    <SelectItem value="CANCELED">Canceled</SelectItem>
+                    <SelectItem value="PENDING">Chờ xử lý</SelectItem>
+                    <SelectItem value="PROCESSING">Đang xử lý</SelectItem>
+                    <SelectItem value="DELIVERED">Đã giao</SelectItem>
+                    <SelectItem value="CANCELED">Đã hủy</SelectItem>
                   </SelectContent>
                 </Select>
                 {error && (
@@ -596,7 +616,7 @@ export default function RecentOrders() {
                     className="border-gray-300 text-gray-600 hover:bg-gray-100 dark:border-strokedark dark:text-gray-400 dark:hover:bg-boxdark-2"
                     disabled={isUpdating}
                   >
-                    Cancel
+                    Hủy
                   </Button>
                 </div>
               </DialogFooter>
@@ -609,14 +629,17 @@ export default function RecentOrders() {
         <DialogContent className="bg-white dark:bg-boxdark">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-black dark:text-white">
-              Confirm Status Update
+              Xác nhận cập nhật trạng thái
             </DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <p className="text-gray-600 dark:text-gray-400">
-              Are you sure you want to update the order status to{' '}
+              Bạn có chắc chắn muốn cập nhật trạng thái đơn hàng thành{' '}
               <span className="font-medium text-black dark:text-white">
-                {pendingStatusUpdate?.newStatus}
+                {pendingStatusUpdate?.newStatus === "PENDING" ? "Chờ xử lý" :
+                 pendingStatusUpdate?.newStatus === "PROCESSING" ? "Đang xử lý" :
+                 pendingStatusUpdate?.newStatus === "DELIVERED" ? "Đã giao" :
+                 "Đã hủy"}
               </span>?
             </p>
           </div>
@@ -631,7 +654,7 @@ export default function RecentOrders() {
                 disabled={isUpdating}
                 className="border-gray-300 text-gray-600 hover:bg-gray-100 dark:border-strokedark dark:text-gray-400 dark:hover:bg-boxdark-2"
               >
-                Cancel
+                Hủy
               </Button>
               <Button
                 onClick={confirmStatusUpdate}
@@ -641,10 +664,10 @@ export default function RecentOrders() {
                 {isUpdating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating...
+                    Đang cập nhật...
                   </>
                 ) : (
-                  'Confirm Update'
+                  "Xác nhận"
                 )}
               </Button>
             </div>

@@ -1,23 +1,60 @@
 import React, { useState, useEffect } from "react";
+import { Category } from "@/types/category";
+import { apiService } from "@/services/api.service";
+import { useRouter } from "next/navigation";
 
-const CustomSelect = ({ options }) => {
+interface CustomSelectProps {
+  onCategorySelect?: (categoryId: string | null) => void;
+}
+
+const CustomSelect = ({ onCategorySelect }: CustomSelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState(options[0]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await apiService.getCategories();
+        setCategories(data);
+        if (data.length > 0) {
+          setSelectedCategory(data[0]);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
 
-  const handleOptionClick = (option) => {
-    setSelectedOption(option);
-    toggleDropdown();
+  const handleCategoryClick = (category: Category | null) => {
+    setSelectedCategory(category);
+    
+    // Navigate to shop-with-sidebar and filter by category
+    if (category) {
+      router.push(`/shop-with-sidebar?category=${category._id}`);
+    } else {
+      router.push('/shop-with-sidebar');
+    }
+    
+    if (onCategorySelect) {
+      onCategorySelect(category?._id || null);
+    }
+    setIsOpen(false);
   };
 
   useEffect(() => {
     // closing modal while clicking outside
-    function handleClickOutside(event) {
-      if (!event.target.closest(".dropdown-content")) {
-        toggleDropdown();
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      if (!target.closest(".dropdown-content")) {
+        setIsOpen(false);
       }
     }
 
@@ -28,7 +65,7 @@ const CustomSelect = ({ options }) => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [isOpen]);
 
   return (
     <div className="dropdown-content custom-select relative" style={{ width: "200px" }}>
@@ -38,18 +75,26 @@ const CustomSelect = ({ options }) => {
         }`}
         onClick={toggleDropdown}
       >
-        {selectedOption.label}
+        {selectedCategory ? selectedCategory.name : "Tất cả danh mục"}
       </div>
       <div className={`select-items ${isOpen ? "" : "select-hide"}`}>
-        {options.slice(1, -1).map((option, index) => (
+        <div
+          onClick={() => handleCategoryClick(null)}
+          className={`select-item ${
+            !selectedCategory ? "same-as-selected" : ""
+          }`}
+        >
+          Tất cả danh mục
+        </div>
+        {categories.map((category) => (
           <div
-            key={index}
-            onClick={() => handleOptionClick(option)}
+            key={category._id}
+            onClick={() => handleCategoryClick(category)}
             className={`select-item ${
-              selectedOption === option ? "same-as-selected" : ""
+              selectedCategory?._id === category._id ? "same-as-selected" : ""
             }`}
           >
-            {option.label}
+            {category.name}
           </div>
         ))}
       </div>

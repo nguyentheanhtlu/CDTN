@@ -170,18 +170,22 @@ export const grantVoucherToUser = async (req: Request, res: Response) => {
     }
 };
 
-// Admin: Xóa voucher khỏi user (theo index trong mảng vouchers)
+// Admin: Xóa voucher khỏi user (theo id)
 export const removeVoucherFromUser = async (req: Request, res: Response) => {
     try {
-        const { userId, voucherIndex } = req.params;
+        const { userId, voucherId } = req.params;
         const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: 'Không tìm thấy user' });
+        
         user.vouchers = user.vouchers || [];
-        const idx = Number(voucherIndex);
-        if (isNaN(idx) || idx < 0 || idx >= user.vouchers.length) {
-            return res.status(400).json({ message: 'Voucher index không hợp lệ' });
+        // Tìm voucher theo _id của MongoDB
+        const voucherIndex = user.vouchers.findIndex(v => v._id && v._id.toString() === voucherId);
+        
+        if (voucherIndex === -1) {
+            return res.status(404).json({ message: 'Không tìm thấy voucher' });
         }
-        user.vouchers.splice(idx, 1);
+
+        user.vouchers.splice(voucherIndex, 1);
         await user.save();
         res.json({ message: 'Xóa voucher thành công', vouchers: user.vouchers });
     } catch (error) {
@@ -192,11 +196,8 @@ export const removeVoucherFromUser = async (req: Request, res: Response) => {
 // Lấy danh sách voucher của user (admin hoặc chính user)
 export const getUserVouchers = async (req: AuthRequest, res: Response) => {
     try {
-        const { userId } = req.params;
-        const requester = req.user;
-        if (!requester || (requester.role !== 'admin' && requester._id !== userId)) {
-            return res.status(403).json({ message: 'Không có quyền truy cập' });
-        }
+        // Lấy userId từ user đã authenticate
+        const userId = req.user?._id;
         const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: 'Không tìm thấy user' });
         res.json({ vouchers: user.vouchers || [] });
@@ -245,7 +246,7 @@ export const getUserAddresses = async (req: AuthRequest, res: Response) => {
     } catch (error) {
         res.status(500).json({ message: 'Lỗi khi lấy danh sách địa chỉ', error });
     }
-};
+};   
 
 // Thêm địa chỉ mới
 export const addUserAddress = async (req: AuthRequest, res: Response) => {
@@ -270,17 +271,34 @@ export const addUserAddress = async (req: AuthRequest, res: Response) => {
 export const updateUserAddress = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user?._id;
-        const { index } = req.params;
+        const { id } = req.params;
         const { name, phone, addressLine, ward, district, province, isDefault } = req.body;
         const user = await User.findById(userId);
-        const idx = Number(index);
-        if (!user || !user.addresses || isNaN(idx) || idx < 0 || idx >= user.addresses.length) {
+        
+        if (!user || !user.addresses) {
+            return res.status(404).json({ message: 'Không tìm thấy user' });
+        }
+
+        const addressIndex = user.addresses.findIndex(addr => addr._id && addr._id.toString() === id);
+        if (addressIndex === -1) {
             return res.status(404).json({ message: 'Không tìm thấy địa chỉ' });
         }
+
         if (isDefault) {
             user.addresses.forEach(addr => addr.isDefault = false);
         }
-        user.addresses[idx] = { name, phone, addressLine, ward, district, province, isDefault: !!isDefault };
+
+        user.addresses[addressIndex] = { 
+            ...user.addresses[addressIndex],
+            name, 
+            phone, 
+            addressLine, 
+            ward, 
+            district, 
+            province, 
+            isDefault: !!isDefault 
+        };
+
         await user.save();
         res.json({ message: 'Cập nhật địa chỉ thành công', addresses: user.addresses });
     } catch (error) {
@@ -288,17 +306,23 @@ export const updateUserAddress = async (req: AuthRequest, res: Response) => {
     }
 };
 
-// Xóa địa chỉ (theo index)
+// Xóa địa chỉ (theo id)
 export const deleteUserAddress = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user?._id;
-        const { index } = req.params;
+        const { id } = req.params;
         const user = await User.findById(userId);
-        const idx = Number(index);
-        if (!user || !user.addresses || isNaN(idx) || idx < 0 || idx >= user.addresses.length) {
+        
+        if (!user || !user.addresses) {
+            return res.status(404).json({ message: 'Không tìm thấy user' });
+        }
+
+        const addressIndex = user.addresses.findIndex(addr => addr._id && addr._id.toString() === id);
+        if (addressIndex === -1) {
             return res.status(404).json({ message: 'Không tìm thấy địa chỉ' });
         }
-        user.addresses.splice(idx, 1);
+
+        user.addresses.splice(addressIndex, 1);
         await user.save();
         res.json({ message: 'Xóa địa chỉ thành công', addresses: user.addresses });
     } catch (error) {
@@ -306,20 +330,55 @@ export const deleteUserAddress = async (req: AuthRequest, res: Response) => {
     }
 };
 
-// Đặt địa chỉ mặc định (theo index)
+// Đặt địa chỉ mặc định (theo id)
 export const setDefaultUserAddress = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user?._id;
-        const { index } = req.params;
+        const { id } = req.params;
         const user = await User.findById(userId);
-        const idx = Number(index);
-        if (!user || !user.addresses || isNaN(idx) || idx < 0 || idx >= user.addresses.length) {
+        
+        if (!user || !user.addresses) {
+            return res.status(404).json({ message: 'Không tìm thấy user' });
+        }
+
+        const addressIndex = user.addresses.findIndex(addr => addr._id && addr._id.toString() === id);
+        if (addressIndex === -1) {
             return res.status(404).json({ message: 'Không tìm thấy địa chỉ' });
         }
-        user.addresses.forEach((addr, i) => addr.isDefault = i === idx);
+
+        user.addresses.forEach((addr, i) => addr.isDefault = i === addressIndex);
         await user.save();
         res.json({ message: 'Đặt địa chỉ mặc định thành công', addresses: user.addresses });
     } catch (error) {
         res.status(500).json({ message: 'Lỗi khi đặt địa chỉ mặc định', error });
+    }
+};
+
+// Lấy tất cả user (admin)
+export const getAllUsers = async (req: AuthRequest, res: Response) => {
+    try {
+        if (!req.user || req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Không có quyền truy cập' });
+        }
+        const users = await User.find({ role: 'customer' }).select('-password -verificationCode -verificationCodeExpires');
+        res.json({ users });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi khi lấy danh sách user', error });
+    }
+};
+
+// Lấy thông tin chi tiết người dùng theo ID (admin)
+export const getUserById = async (req: AuthRequest, res: Response) => {
+    try {
+        if (!req.user || req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Không có quyền truy cập' });
+        }
+
+        const { id } = req.params;
+        const user = await User.findById(id)
+            .select('-password -verificationCode -verificationCodeExpires');
+        res.json({ user });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi khi lấy thông tin người dùng', error });
     }
 }; 

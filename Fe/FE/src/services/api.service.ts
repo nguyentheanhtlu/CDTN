@@ -9,6 +9,7 @@ import { Cart } from '@/types/cart';
 import { Review, ReviewResponse } from '@/types/review';
 import { Voucher } from '@/types/voucher';
 import { Address } from '@/types/address';
+import { Message } from '@/types/message';
 
 class ApiService {
   private api: AxiosInstance;
@@ -366,12 +367,21 @@ class ApiService {
 
   // Chat APIs
   async getChatHistory(userId: string, adminId: string) {
-    const response = await this.api.get<any[]>(`/chat/history/${userId}/${adminId}`);
+    const response = await this.api.get<Message[]>(`/chat/history/${userId}/${adminId}`);
     return response.data;
   }
 
   async getUnreadCount(userId: string) {
     const response = await this.api.get<{ unreadCount: number }>(`/chat/unread/${userId}`);
+    return response.data;
+  }
+
+  async sendMessage(senderId: string, receiverId: string, content: string) {
+    const response = await this.api.post<Message>('/chat/message', { 
+      senderId, 
+      receiverId, 
+      content 
+    });
     return response.data;
   }
 

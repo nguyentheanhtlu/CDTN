@@ -11,4 +11,7 @@ router.get('/history/:userId/:adminId', authenticateToken, chatController.getCha
 // Get unread messages count
 router.get('/unread/:userId', authenticateToken, chatController.getUnreadCount);
 
+// Send new message
+router.post('/message', authenticateToken, chatController.sendMessage);
+
 export default router;

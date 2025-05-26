@@ -10,7 +10,7 @@ const router = Router();
 router.get('/', productController.getProducts);
 router.get('/:id', productController.getProductDetail);
 router.post('/:id/review', authenticateToken, (req, res, next) => reviewProduct(req, res).catch(next));
-router.get('/:id/reviews', productController.getProductReviews);
+router.get('/:id/review', productController.getProductReviews);
 
 // Admin routes
 router.use((req: any, res: any, next: any) => {

@@ -2,8 +2,8 @@ export interface Voucher {
   _id: string;
   type: 'discount' | 'free_shipping';
   value: number;
+  status: 'active' | 'used' | 'expired';
   expiredAt?: string;
-  isUsed: boolean;
-  usedAt?: string;
-  createdAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 } 
