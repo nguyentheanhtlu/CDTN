@@ -333,7 +333,7 @@ const MyAccount = () => {
 
                     <button
                       onClick={handleLogout}
-                      className="flex items-center rounded-md gap-2.5 py-3 px-4.5 ease-out duration-200 hover:bg-red-500 hover:text-white text-dark-2 bg-gray-1"
+                      className="flex items-center rounded-md gap-2.5 py-3 px-4.5 ease-out duration-200 hover:bg-red hover:text-white text-dark-2 bg-gray-1"
                     >
                       <svg
                         className="fill-current"

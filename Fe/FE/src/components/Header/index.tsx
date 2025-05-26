@@ -10,6 +10,7 @@ import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
 import Image from "next/image";
 import { getUserInfo, uploadAvatar } from "@/api/auth.api";
 import { setLogin } from "@/redux/features/authSlice";
+import { useRouter } from "next/navigation";
 
 const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -22,6 +23,7 @@ const Header = () => {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarMessage, setAvatarMessage] = useState<string | null>(null);
   const dispatch = useAppDispatch()
+  const router = useRouter()
 
   const cart = useAppSelector(selectCart);
   const cartItems = cart?.items || [];
@@ -109,6 +111,7 @@ const Header = () => {
     dispatch(setLogin(false))
     dispatch(clearCart())
     window.location.reload();
+    
   };
 
   const options = [
@@ -290,14 +293,22 @@ const Header = () => {
                               <span className="absolute bottom-0 left-0 w-full bg-black/40 text-xs text-center py-1 opacity-0 group-hover:opacity-100 transition">Update avatar</span>
                             </div>
                           </label>
-                          <span className="font-bold text-dark text-lg mb-0.5 truncate w-full text-center max-w-[160px]">{user?.user?.fullName || user?.user?.email}</span>
+                          <Link href={'/my-account'} className="font-bold text-dark text-lg mb-0.5 truncate w-full text-center max-w-[160px]  cursor-pointer">{user?.user?.fullName || user?.user?.email}</Link>
                           <span className="text-xs text-gray-500 truncate w-full text-center max-w-[160px]">{user?.user?.email}</span>
                         </div>
                         <button
-                          onClick={handleSignOut}
-                          className="w-11/12 text-center py-3 text-base font-semibold text-red-500 border-2 border-red-400 bg-white transition rounded-xl mt-3 mb-2 mx-auto block shadow-sm"
+                          onClick={() =>
+                            router.push('/my-account')
+                          }
+                          className="w-11/12 text-center py-3 text-base font-semibold text-red-500 border-2 border-red-400 bg-white transition rounded-xl mt-2 mx-auto block shadow-sm"
                         >
-                          Sign Out
+                          Tài khoản của tôi
+                        </button>
+                        <button
+                          onClick={handleSignOut}
+                          className="w-11/12 text-center py-3 text-base font-semibold text-red-500 border-2 border-red-400 bg-white transition rounded-xl my-2 mx-auto block shadow-sm"
+                        >
+                          Đăng xuất
                         </button>
                       </div>
                     )}

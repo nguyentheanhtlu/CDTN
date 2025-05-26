@@ -5,10 +5,9 @@ import ProductItem from "./ProductItem";
 
 interface ProductListProps {
   products: Product[];
-  viewMode?: 'grid' | 'list';
 }
 
-const ProductList = ({ products, viewMode = 'grid' }: ProductListProps) => {
+const ProductList = ({ products }: ProductListProps) => {
   if (!products?.length) {
     return (
       <div className="text-center py-8">
@@ -18,10 +17,10 @@ const ProductList = ({ products, viewMode = 'grid' }: ProductListProps) => {
   }
 
   return (
-    <div className={`product-list ${viewMode === 'list' ? 'list-view' : 'grid-view'}`}>
+    <div className={'product-list grid-view'}>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {products?.map((product) => (
-          <ProductItem key={product._id} item={product} viewMode={viewMode} />
+          <ProductItem key={product._id} item={product} />
         ))}
       </div>
     </div>
