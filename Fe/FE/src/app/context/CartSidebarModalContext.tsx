@@ -1,5 +1,7 @@
 "use client";
-import React, { createContext, useContext, useState } from "react";
+import { loadCart } from "@/redux/actions/cart.action";
+import { useAppDispatch, useAppSelector } from "@/redux/store";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 interface CartModalContextType {
   isCartModalOpen: boolean;
@@ -21,6 +23,12 @@ export const useCartModalContext = () => {
 
 export const CartModalProvider = ({ children }) => {
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
+  const { loggedIn } = useAppSelector(state => state.auth)
+  const dispatch = useAppDispatch()
+
+  useEffect(() => {
+    if (loggedIn) dispatch(loadCart())
+  }, [loggedIn]);
 
   const openCartModal = () => {
     setIsCartModalOpen(true);

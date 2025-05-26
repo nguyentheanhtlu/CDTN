@@ -5,6 +5,8 @@ import Link from "next/link";
 import React, { useState } from "react";
 import { login } from "@/api/auth.api";
 import { useRouter } from "next/navigation";
+import { setLogin } from "@/redux/features/authSlice";
+import { useAppDispatch } from "@/redux/store";
 
 const Signin = () => {
   const [form, setForm] = useState({
@@ -14,6 +16,7 @@ const Signin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const dispatch = useAppDispatch()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -31,6 +34,7 @@ const Signin = () => {
       const res = await login({ email: form.email, password: form.password });
       // Giả sử API trả về token trong res.data.token
       localStorage.setItem("token", res.data.token);
+      dispatch(setLogin(true))
       router.push("/");
     } catch (err: any) {
       setError(err?.response?.data?.message || "Login failed");

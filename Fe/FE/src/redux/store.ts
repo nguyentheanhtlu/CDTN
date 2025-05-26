@@ -8,9 +8,11 @@ import autoMergeLevel2 from "redux-persist/es/stateReconciler/autoMergeLevel2";
 import { appMiddleware } from "./middleware/app.middleware";
 import { wishlistSlice, WishlistState } from "./features/wishlist-slice";
 import { productDetails, ProductState } from "./features/product-details";
+import { authSlice, AuthSliceState } from "./features/authSlice";
 
 
 const reducers = combineReducers({
+  auth: authSlice.reducer,
   quickView: quickViewSlice.reducer,
   cart: cart.reducer,
   wishlist: wishlistSlice.reducer,
@@ -35,6 +37,7 @@ export const store = configureStore({
 export const persistor = persistStore(store);
 
 export type RootState = {
+  auth: AuthSliceState;
   quickView: QuickViewState;
   cart: CartState;
   productDetails: ProductState;

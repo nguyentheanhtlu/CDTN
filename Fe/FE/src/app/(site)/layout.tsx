@@ -17,16 +17,21 @@ import ScrollToTop from "@/components/Common/ScrollToTop";
 import PreLoader from "@/components/Common/PreLoader";
 import Chatbot from "@/components/Common/Chatbot";
 import { Toaster } from "react-hot-toast";
+import { useAppDispatch, useAppSelector } from "@/redux/store";
 
+let timeoutId;
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const [loading, setLoading] = useState<boolean>(true);
-
+  
   useEffect(() => {
-    setTimeout(() => setLoading(false), 1000);
+
+    timeoutId = setTimeout(() => setLoading(false), 1000);
+
+    return () => clearTimeout(timeoutId)
   }, []);
 
   return (
@@ -42,7 +47,6 @@ export default function RootLayout({
                   <PreviewSliderProvider>
                     <Header />
                     {children}
-
                     <QuickViewModal />
                     <CartSidebarModal />
                     <PreviewSliderModal />
