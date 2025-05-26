@@ -124,7 +124,7 @@ const MyAccount = () => {
   const handleLogout = async () => {
     try {
       await apiService.logout();
-      router.push('/login');
+      router.push('/signin');
     } catch (error) {
       console.error('Lỗi khi đăng xuất:', error);
       toast.error('Không thể đăng xuất');
@@ -171,7 +171,7 @@ const MyAccount = () => {
                 <div className="hidden lg:flex flex-wrap items-center gap-5 py-6 px-4 sm:px-7.5 xl:px-9 border-r xl:border-r-0 xl:border-b border-gray-3">
                   <div className="max-w-[64px] w-full h-16 rounded-full overflow-hidden">
                     <Image
-                      src={userData.avatar || "/images/users/user-04.jpg"}
+                      src={userData.avatar || "/images/users/default-avatar.jpg"}
                       alt="avatar"
                       width={64}
                       height={64}
