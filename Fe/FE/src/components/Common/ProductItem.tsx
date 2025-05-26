@@ -4,7 +4,6 @@ import Image from "next/image";
 import { Product } from "@/types/product";
 import { useModalContext } from "@/app/context/QuickViewModalContext";
 import { updateQuickView } from "@/redux/features/quickView-slice";
-import { addToCart } from "@/redux/features/cart-slice";
 import { addItemToWishlist } from "@/redux/features/wishlist-slice";
 import { updateproductDetails } from "@/redux/features/product-details";
 import { useDispatch } from "react-redux";
@@ -12,6 +11,7 @@ import { AppDispatch } from "@/redux/store";
 import Link from "next/link";
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { addToCart } from "@/redux/actions/cart.action";
 
 interface ProductItemProps {
   item: Product;
@@ -34,7 +34,7 @@ const ProductItem = ({ item, viewMode = 'grid' }: ProductItemProps) => {
 
   // add to cart
   const handleAddToCart = () => {
-    dispatch(addToCart(item._id, 1));
+    dispatch(addToCart({ productId: item._id, quantity: 1}));
     toast.success('Added to cart');
   };
 

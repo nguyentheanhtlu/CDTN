@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Product } from "@/types/product";
 
-interface WishlistState {
+export interface WishlistState {
   items: Product[];
 }
 
@@ -9,7 +9,7 @@ const initialState: WishlistState = {
   items: [],
 };
 
-const wishlistSlice = createSlice({
+export const wishlistSlice = createSlice({
   name: "wishlist",
   initialState,
   reducers: {
@@ -29,4 +29,3 @@ const wishlistSlice = createSlice({
 });
 
 export const { addItemToWishlist, removeFromWishlist, clearWishlist } = wishlistSlice.actions;
-export default wishlistSlice.reducer;

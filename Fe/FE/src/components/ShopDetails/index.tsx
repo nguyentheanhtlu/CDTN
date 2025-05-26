@@ -77,7 +77,7 @@ const ShopDetails = () => {
 
   const alreadyExist = localStorage.getItem("productDetails");
   const productFromStorage = useAppSelector(
-    (state) => state.productDetailsReducer.value
+    (state) => state.productDetails.value
   );
 
   const product = alreadyExist ? JSON.parse(alreadyExist) : productFromStorage;

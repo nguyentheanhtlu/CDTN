@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useAppDispatch } from "@/redux/store";
-import { addToCart } from "@/redux/features/cart-slice";
 import Image from "next/image";
 import toast from "react-hot-toast";
+import { addToCart } from "@/redux/actions/cart.action";
 
 interface CartItemProps {
   item: {
@@ -25,7 +25,7 @@ const SingleItem: React.FC<CartItemProps> = ({ item }) => {
   const handleUpdateQuantity = async (newQuantity: number) => {
     if (newQuantity < 1) return;
     try {
-      await dispatch(addToCart(item.product._id, newQuantity - item.quantity));
+      dispatch(addToCart({ productId: item.product._id, quantity }));
       setQuantity(newQuantity);
     } catch (error) {
       toast.error('Cập nhật số lượng thất bại');
@@ -51,9 +51,9 @@ const SingleItem: React.FC<CartItemProps> = ({ item }) => {
         <div className="flex items-center justify-between gap-5">
           <div className="w-full flex items-center gap-5.5">
             <div className="flex items-center justify-center rounded-[5px] bg-gray-2 max-w-[80px] w-full h-17.5">
-              <Image 
-                width={200} 
-                height={200} 
+              <Image
+                width={200}
+                height={200}
                 src={productImage}
                 alt={item.product?.name || 'Hình ảnh sản phẩm'}
                 className="object-contain"

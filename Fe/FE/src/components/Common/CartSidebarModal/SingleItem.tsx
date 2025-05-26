@@ -21,7 +21,7 @@ const SingleItem = ({ item }: { item: CartItem }) => {
 
   const handleRemoveFromCart = async () => {
     try {
-      await dispatch(removeItemFromCart(item.product._id)).unwrap();
+      await dispatch(removeItemFromCart(item.product._id));
       toast.success('Đã xóa sản phẩm khỏi giỏ hàng');
     } catch (error) {
       toast.error('Không thể xóa sản phẩm khỏi giỏ hàng');

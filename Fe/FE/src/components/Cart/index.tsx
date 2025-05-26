@@ -6,8 +6,9 @@ import { useAppDispatch, useAppSelector } from "@/redux/store";
 import SingleItem from "./SingleItem";
 import Breadcrumb from "../Common/Breadcrumb";
 import Link from "next/link";
-import { fetchCart, selectCartItems, selectCartLoading, selectCartError, clearCart } from "@/redux/features/cart-slice";
+import { selectCartItems, selectCartLoading, selectCartError, clearCart } from "@/redux/features/cart-slice";
 import toast from "react-hot-toast";
+import { loadCart } from "@/redux/actions/cart.action";
 
 const Cart = () => {
   const dispatch = useAppDispatch();
@@ -16,8 +17,8 @@ const Cart = () => {
   const error = useAppSelector(selectCartError);
 
   useEffect(() => {
-    dispatch(fetchCart());
-  }, [dispatch]);
+    dispatch(loadCart());
+  }, []);
 
   useEffect(() => {
     if (error) {

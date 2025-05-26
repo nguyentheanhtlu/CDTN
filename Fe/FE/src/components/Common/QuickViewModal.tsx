@@ -3,12 +3,12 @@ import React, { useEffect, useState } from "react";
 
 import { useModalContext } from "@/app/context/QuickViewModalContext";
 import { AppDispatch, useAppSelector } from "@/redux/store";
-import { addToCart } from "@/redux/features/cart-slice";
 import { useDispatch } from "react-redux";
 import Image from "next/image";
 import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
 import { clearQuickView } from "@/redux/features/quickView-slice";
 import { updateproductDetails } from "@/redux/features/product-details";
+import { addToCart } from "@/redux/actions/cart.action";
 
 const QuickViewModal = () => {
   const { isModalOpen, closeModal } = useModalContext();
@@ -18,7 +18,7 @@ const QuickViewModal = () => {
   const dispatch = useDispatch<AppDispatch>();
 
   // get the product data
-  const product = useAppSelector((state) => state.quickViewReducer.product);
+  const product = useAppSelector((state) => state.quickView.product);
 
   const [activePreview, setActivePreview] = useState(0);
 
@@ -32,7 +32,7 @@ const QuickViewModal = () => {
   // add to cart
   const handleAddToCart = () => {
     if (!product) return;
-    dispatch(addToCart(product._id, quantity));
+    dispatch(addToCart({ productId: product._id, quantity }));
     closeModal();
   };
 
@@ -58,9 +58,8 @@ const QuickViewModal = () => {
 
   return (
     <div
-      className={`${
-        isModalOpen ? "z-99999" : "hidden"
-      } fixed top-0 left-0 overflow-y-auto no-scrollbar w-full h-screen sm:py-20 xl:py-25 2xl:py-[230px] bg-dark/70 sm:px-8 px-4 py-5`}
+      className={`${isModalOpen ? "z-99999" : "hidden"
+        } fixed top-0 left-0 overflow-y-auto no-scrollbar w-full h-screen sm:py-20 xl:py-25 2xl:py-[230px] bg-dark/70 sm:px-8 px-4 py-5`}
     >
       <div className="flex items-center justify-center">
         <div className="w-full max-w-[1100px] rounded-xl shadow-3 bg-white p-7.5 relative modal-content">
@@ -94,9 +93,8 @@ const QuickViewModal = () => {
                     <button
                       onClick={() => setActivePreview(key)}
                       key={key}
-                      className={`flex items-center justify-center w-20 h-20 overflow-hidden rounded-lg bg-gray-1 ease-out duration-200 hover:border-2 hover:border-blue ${
-                        activePreview === key && "border-2 border-blue"
-                      }`}
+                      className={`flex items-center justify-center w-20 h-20 overflow-hidden rounded-lg bg-gray-1 ease-out duration-200 hover:border-2 hover:border-blue ${activePreview === key && "border-2 border-blue"
+                        }`}
                     >
                       <Image
                         src={img || ""}
@@ -165,11 +163,10 @@ const QuickViewModal = () => {
                   {[...Array(5)].map((_, index) => (
                     <svg
                       key={index}
-                      className={`${
-                        index < Math.floor(product.averageRating || 0)
-                          ? "fill-[#FFA645]"
-                          : "fill-gray-4"
-                      }`}
+                      className={`${index < Math.floor(product.averageRating || 0)
+                        ? "fill-[#FFA645]"
+                        : "fill-gray-4"
+                        }`}
                       width="18"
                       height="18"
                       viewBox="0 0 18 18"

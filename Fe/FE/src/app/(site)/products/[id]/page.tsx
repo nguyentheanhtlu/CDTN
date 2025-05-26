@@ -2,11 +2,11 @@
 import React, { useEffect, useState, use } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/redux/store';
-import { addToCart } from '@/redux/features/cart-slice';
 import { AppDispatch } from '@/redux/store';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { addToCart } from '@/redux/actions/cart.action';
 
 const TABS = [
   { id: 'description', label: 'Mô tả' },
@@ -23,7 +23,7 @@ const ProductDetail = ({ params }: { params: Promise<{ id: string }> }) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState('black');
   const [activeImg, setActiveImg] = useState(0);
-  const productDetail = useSelector((state: RootState) => state.productDetailsReducer.value);
+  const productDetail = useSelector((state: RootState) => state.productDetails.value);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -52,7 +52,7 @@ const ProductDetail = ({ params }: { params: Promise<{ id: string }> }) => {
     if (!product) return;
     
     try {
-      dispatch(addToCart(product._id, quantity));
+      dispatch(addToCart({ productId: product._id, quantity}));
       toast.success('Đã thêm vào giỏ hàng');
     } catch (error) {
       toast.error('Không thể thêm vào giỏ hàng');
@@ -64,7 +64,7 @@ const ProductDetail = ({ params }: { params: Promise<{ id: string }> }) => {
     
     try {
       // Thêm vào giỏ hàng trước
-      dispatch(addToCart(product._id, quantity));
+      dispatch(addToCart({ productId: product._id, quantity}));
       // Chuyển đến trang thanh toán
       router.push('/checkout');
     } catch (error) {

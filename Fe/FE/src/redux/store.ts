@@ -1,22 +1,46 @@
-import { configureStore } from "@reduxjs/toolkit";
-
-import quickViewReducer from "./features/quickView-slice";
-import cartReducer from "./features/cart-slice";
-import wishlistReducer from "./features/wishlist-slice";
-import productDetailsReducer from "./features/product-details";
-
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import { quickViewSlice, QuickViewState } from "./features/quickView-slice";
+import cartReducer, { cart, CartState } from "./features/cart-slice";
+import storage from 'redux-persist/lib/storage'
+import { persistStore, persistReducer } from 'redux-persist'
 import { TypedUseSelectorHook, useSelector, useDispatch } from "react-redux";
+import autoMergeLevel2 from "redux-persist/es/stateReconciler/autoMergeLevel2";
+import { appMiddleware } from "./middleware/app.middleware";
+import { wishlistSlice, WishlistState } from "./features/wishlist-slice";
+import { productDetails, ProductState } from "./features/product-details";
+
+
+const reducers = combineReducers({
+  quickView: quickViewSlice.reducer,
+  cart: cart.reducer,
+  wishlist: wishlistSlice.reducer,
+  productDetails: productDetails.reducer
+})
+
+const persistedReducer = persistReducer({
+  key: 'root',
+  storage,
+  stateReconciler: autoMergeLevel2
+}, reducers)
 
 export const store = configureStore({
-  reducer: {
-    quickViewReducer,
-    cartReducer,
-    wishlistReducer,
-    productDetailsReducer,
-  },
+  reducer: persistedReducer,
+  middleware: getDefaultMiddleware =>
+    getDefaultMiddleware({
+      serializableCheck: false,
+      immutableCheck: false,
+    }).prepend(appMiddleware.middleware),
 });
 
-export type RootState = ReturnType<typeof store.getState>;
+export const persistor = persistStore(store);
+
+export type RootState = {
+  quickView: QuickViewState;
+  cart: CartState;
+  productDetails: ProductState;
+  wishlist: WishlistState;
+};
+
 export type AppDispatch = typeof store.dispatch;
 
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;

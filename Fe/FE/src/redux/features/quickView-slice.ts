@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Product } from "@/types/product";
 
-interface QuickViewState {
+export interface QuickViewState {
   product: Product | null;
 }
 
@@ -9,7 +9,7 @@ const initialState: QuickViewState = {
   product: null,
 };
 
-const quickViewSlice = createSlice({
+export const quickViewSlice = createSlice({
   name: "quickView",
   initialState,
   reducers: {
@@ -24,4 +24,3 @@ const quickViewSlice = createSlice({
 });
 
 export const { updateQuickView, clearQuickView } = quickViewSlice.actions;
-export default quickViewSlice.reducer;

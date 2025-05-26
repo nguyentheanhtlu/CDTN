@@ -20,40 +20,40 @@ const Coupon: React.FC<CouponProps> = ({ onVoucherSelect }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchVouchers = async () => {
-      try {
-        setLoading(true);
-        const response = await apiService.getVouchers();
-        
-        // Kiểm tra và chuyển đổi response
-        let vouchersData: Voucher[] = [];
-        
-        if (response && typeof response === 'object') {
-          if (Array.isArray(response)) {
-            vouchersData = response;
-          } else if ('vouchers' in response && Array.isArray(response.vouchers)) {
-            vouchersData = response.vouchers;
-          }
-        }
-
-        // Lọc các voucher active
-        const activeVouchers = vouchersData.filter(v => v.status === 'active');
-        setVouchers(activeVouchers);
-        
-        if (activeVouchers.length === 0) {
-          toast('Bạn chưa có voucher nào');
-        }
-      } catch (error) {
-        console.error('Error fetching vouchers:', error);
-        setVouchers([]);
-        toast.error('Không thể tải danh sách voucher');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchVouchers();
   }, []);
+
+  const fetchVouchers = async () => {
+    try {
+      setLoading(true);
+      const response: any = await apiService.getVouchers();
+
+      // Kiểm tra và chuyển đổi response
+      let vouchersData: Voucher[] = [];
+
+      if (response && typeof response === 'object') {
+        if (Array.isArray(response)) {
+          vouchersData = response;
+        } else if ('vouchers' in response && Array.isArray(response.vouchers)) {
+          vouchersData = response.vouchers;
+        }
+      }
+
+      // Lọc các voucher active
+      const activeVouchers = vouchersData.filter(v => v.status === 'active');
+      setVouchers(activeVouchers);
+
+      if (activeVouchers.length === 0) {
+        toast('Bạn chưa có voucher nào');
+      }
+    } catch (error) {
+      console.error('Error fetching vouchers:', error);
+      setVouchers([]);
+      toast.error('Không thể tải danh sách voucher');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSelectVoucher = (e: React.MouseEvent, voucher: Voucher) => {
     // Ngăn chặn sự kiện click lan ra ngoài
@@ -94,7 +94,7 @@ const Coupon: React.FC<CouponProps> = ({ onVoucherSelect }) => {
     }
 
     setSelectedVouchers(newSelectedVouchers);
-    
+
     if (onVoucherSelect) {
       onVoucherSelect(newSelectedVouchers.map(v => v._id));
     }
@@ -116,19 +116,18 @@ const Coupon: React.FC<CouponProps> = ({ onVoucherSelect }) => {
         ) : vouchers.length > 0 ? (
           <div className="space-y-4">
             {vouchers.map((voucher) => (
-              <div 
+              <div
                 key={voucher._id}
-                className={`p-4 border rounded-md ${
-                  isVoucherSelected(voucher)
-                    ? 'border-blue bg-blue/5' 
+                className={`p-4 border rounded-md ${isVoucherSelected(voucher)
+                    ? 'border-blue bg-blue/5'
                     : 'border-gray-3'
-                }`}
+                  }`}
               >
                 <div className="flex justify-between items-center">
                   <div>
                     <h4 className="font-medium text-dark">
-                      {voucher.type === 'discount' 
-                        ? `Giảm ${voucher.value}%` 
+                      {voucher.type === 'discount'
+                        ? `Giảm ${voucher.value}%`
                         : 'Miễn phí vận chuyển'}
                     </h4>
                     <p className="text-sm text-dark-5">
@@ -138,11 +137,10 @@ const Coupon: React.FC<CouponProps> = ({ onVoucherSelect }) => {
                   <button
                     type="button"
                     onClick={(e) => handleSelectVoucher(e, voucher)}
-                    className={`px-4 py-2 rounded-md ${
-                      isVoucherSelected(voucher)
+                    className={`px-4 py-2 rounded-md ${isVoucherSelected(voucher)
                         ? 'bg-blue text-white'
                         : 'bg-gray-1 text-dark hover:bg-gray-2'
-                    }`}
+                      }`}
                   >
                     {isVoucherSelected(voucher) ? 'Bỏ chọn' : 'Chọn'}
                   </button>

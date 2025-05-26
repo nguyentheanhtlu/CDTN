@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
 import {
   removeItemFromCart,
-  fetchCart,
   selectCartLoading,
   selectCartError,
 } from "@/redux/features/cart-slice";
@@ -14,6 +13,7 @@ import SingleItem from "./SingleItem";
 import Link from "next/link";
 import EmptyCart from "./EmptyCart";
 import toast from "react-hot-toast";
+import { loadCart } from "@/redux/actions/cart.action";
 
 interface CartResponse {
   _id: string;
@@ -37,15 +37,15 @@ interface CartResponse {
 const CartSidebarModal = () => {
   const dispatch = useAppDispatch();
   const { isCartModalOpen, closeCartModal } = useCartModalContext();
-  const cartData = useAppSelector((state) => state.cartReducer.cart) as CartResponse | null;
+  const cartData = useAppSelector((state) => state.cart.cart) as CartResponse | null;
   const loading = useAppSelector(selectCartLoading);
   const error = useAppSelector(selectCartError);
 
   useEffect(() => {
     if (isCartModalOpen) {
-      dispatch(fetchCart());
+      dispatch(loadCart());
     }
-  }, [isCartModalOpen, dispatch]);
+  }, [isCartModalOpen]);
 
   useEffect(() => {
     if (error) {
@@ -125,7 +125,6 @@ const CartSidebarModal = () => {
                     <SingleItem
                       key={key}
                       item={item}
-                      removeItemFromCart={removeItemFromCart}
                     />
                   ))
                 ) : (

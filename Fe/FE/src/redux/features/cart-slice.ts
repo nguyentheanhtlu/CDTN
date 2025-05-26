@@ -1,6 +1,8 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RootState } from "../store";
+import { RootState, store } from "../store";
 import apiService from "@/api/apiService";
+import { addToCart, loadCart } from "../actions/cart.action";
+import { stat } from "node:fs";
 
 interface CartItem {
   _id: string;
@@ -23,13 +25,13 @@ interface Cart {
   updatedAt: string;
 }
 
-type InitialState = {
+export interface CartState {
   cart: Cart | null;
   loading: boolean;
   error: string | null;
 };
 
-const initialState: InitialState = {
+const initialState: CartState = {
   cart: null,
   loading: false,
   error: null,
@@ -62,63 +64,42 @@ export const cart = createSlice({
       }
     }
   },
+  extraReducers: builder => {
+    builder
+      .addCase(loadCart.pending, (state, action) => {
+        state.loading = true
+      })
+      .addCase(loadCart.fulfilled, (state, action) => {
+        state.cart = action.payload;
+        state.loading = false
+      })
+      .addCase(loadCart.rejected, (state, action) => {
+        console.log(action.payload)
+        state.loading = false
+      })
+      .addCase(addToCart.pending, (state, action) => {
+        state.loading = true
+      })
+      .addCase(addToCart.fulfilled, (state, action) => {
+        state.cart = action.payload;
+        state.loading = false
+        state.error = null
+      })
+      .addCase(addToCart.rejected, (state, action) => {
+        console.log(action.payload)
+        state.loading = false
+      })
+  }
 });
 
 // Selectors
-export const selectCart = (state: RootState) => state.cartReducer.cart;
-export const selectCartLoading = (state: RootState) => state.cartReducer.loading;
-export const selectCartError = (state: RootState) => state.cartReducer.error;
+export const selectCart = (state: RootState) => state.cart.cart;
+export const selectCartLoading = (state: RootState) => state.cart.loading;
+export const selectCartError = (state: RootState) => state.cart.error;
 
 // Thêm các selector mới
-export const selectCartItems = (state: RootState) => state.cartReducer.cart?.items || [];
-export const selectTotalPrice = (state: RootState) => state.cartReducer.cart?.totalAmount || 0;
-
-// Thunks
-export const fetchCart = () => async (dispatch: any) => {
-  try {
-    dispatch(setLoading(true));
-    const response = await apiService.getCart();
-    dispatch(setCart(response));
-    dispatch(setError(null));
-  } catch (error) {
-    dispatch(setError(error instanceof Error ? error.message : 'Failed to fetch cart'));
-    dispatch(clearCart());
-    throw error;
-  } finally {
-    dispatch(setLoading(false));
-  }
-};
-
-export const addToCart = (productId: string, quantity: number = 1) => async (dispatch: any, getState: () => RootState) => {
-  try {
-    dispatch(setLoading(true));
-    const state = getState();
-    const cart = state.cartReducer.cart;
-    
-    // Kiểm tra xem sản phẩm đã có trong giỏ hàng chưa
-    const existingItem = cart?.items.find(item => item.product._id === productId);
-    
-    if (existingItem) {
-      // Nếu sản phẩm đã tồn tại, cập nhật số lượng
-      const newQuantity = existingItem.quantity + quantity;
-      await apiService.updateCartItemQuantity(existingItem._id, newQuantity);
-    } else {
-      // Nếu sản phẩm chưa tồn tại, thêm mới
-      await apiService.addToCart(productId, quantity);
-    }
-    
-    // Sau khi thêm/cập nhật, lấy lại giỏ hàng mới nhất
-    const cartResponse = await apiService.getCart();
-    dispatch(setCart(cartResponse));
-    dispatch(setError(null));
-  } catch (error) {
-    console.error('Error adding item to cart:', error);
-    dispatch(setError(error instanceof Error ? error.message : 'Failed to add item to cart'));
-    throw error;
-  } finally {
-    dispatch(setLoading(false));
-  }
-};
+export const selectCartItems = (state: RootState) => state.cart.cart?.items || [];
+export const selectTotalPrice = (state: RootState) => state.cart.cart?.totalAmount || 0;
 
 export const removeItemFromCart = (itemId: string) => async (dispatch: any) => {
   try {

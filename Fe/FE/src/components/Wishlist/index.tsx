@@ -6,7 +6,7 @@ import SingleItem from "./SingleItem";
 import { clearWishlist } from "@/redux/features/wishlist-slice";
 
 export const Wishlist = () => {
-  const wishlistItems = useAppSelector((state) => state.wishlistReducer.items);
+  const wishlistItems = useAppSelector((state) => state.wishlist.items);
   const dispatch = useAppDispatch();
 
   const handleClearWishlist = () => {

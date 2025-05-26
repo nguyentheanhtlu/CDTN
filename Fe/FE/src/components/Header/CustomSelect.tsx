@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 interface CustomSelectProps {
   onCategorySelect?: (categoryId: string | null) => void;
+  options: any
 }
 
 const CustomSelect = ({ onCategorySelect }: CustomSelectProps) => {

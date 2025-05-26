@@ -2,12 +2,14 @@ import { Category } from './category';
 import { Review } from './review';
 
 export interface Product {
+  discountedPrice: number;
+  title: string;
   _id: string;
   name: string;
   description: string;
   price: number;
   discount: number;
-  images: string[];
+  images: any;
   category: string | Category;
   stock: number;
   sold: number;
