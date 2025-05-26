@@ -13,7 +13,6 @@ const ShopWithSidebar = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [productSidebar, setProductSidebar] = useState(false);
 
   useEffect(() => {

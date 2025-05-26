@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import apiService from "@/services/api";
 import { Address } from "@/types/address";
+import { logout, setLogin } from "@/redux/features/authSlice";
+import { useAppDispatch } from "@/redux/store";
 
 const MyAccount = () => {
   const router = useRouter();
@@ -36,6 +38,7 @@ const MyAccount = () => {
   });
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [editAddress, setEditAddress] = useState<Address | null>(null);
+  const dispatch = useAppDispatch()
 
   useEffect(() => {
     fetchUserData();
@@ -123,10 +126,11 @@ const MyAccount = () => {
 
   const handleLogout = async () => {
     try {
-      await apiService.logout();
+      // await apiService.logout();
+      dispatch(logout())
       router.push('/signin');
     } catch (error) {
-      console.error('Lỗi khi đăng xuất:', error);
+      console.log('Lỗi khi đăng xuất:', error);
       toast.error('Không thể đăng xuất');
     }
   };

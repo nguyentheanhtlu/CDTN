@@ -9,7 +9,7 @@ import { clearCart, selectCart } from "@/redux/features/cart-slice";
 import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
 import Image from "next/image";
 import { getUserInfo, uploadAvatar } from "@/api/auth.api";
-import { setLogin } from "@/redux/features/authSlice";
+import { logout, setLogin, setUser } from "@/redux/features/authSlice";
 import { useRouter } from "next/navigation";
 
 const Header = () => {
@@ -17,13 +17,14 @@ const Header = () => {
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [stickyMenu, setStickyMenu] = useState(false);
   const { openCartModal } = useCartModalContext();
-  const [user, setUser] = useState<any>(null);
+  // const [user, setUser] = useState<any>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarMessage, setAvatarMessage] = useState<string | null>(null);
   const dispatch = useAppDispatch()
   const router = useRouter()
+  const { user } = useAppSelector(state => state.auth)
 
   const cart = useAppSelector(selectCart);
   const cartItems = cart?.items || [];
@@ -50,10 +51,7 @@ const Header = () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     if (token) {
       getUserInfo()
-        .then(res => setUser(res.data))
-        .catch(() => setUser(null));
-    } else {
-      setUser(null);
+        .then(res => dispatch(setUser(res.data)))
     }
   }, []);
 
@@ -64,10 +62,7 @@ const Header = () => {
         const token = e.newValue;
         if (token) {
           getUserInfo()
-            .then(res => setUser(res.data))
-            .catch(() => setUser(null));
-        } else {
-          setUser(null);
+            .then(res => dispatch(setUser(res.data)))
         }
       }
     }
@@ -80,11 +75,7 @@ const Header = () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     if (token && !user) {
       getUserInfo()
-        .then(res => setUser(res.data))
-        .catch(() => setUser(null));
-    }
-    if (!token && user) {
-      setUser(null);
+            .then(res => dispatch(setUser(res.data)))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [typeof window !== 'undefined' ? localStorage.getItem('token') : null]);
@@ -107,11 +98,9 @@ const Header = () => {
 
   const handleSignOut = () => {
     localStorage.removeItem('token');
-    setUser(null);
-    dispatch(setLogin(false))
+    dispatch(logout())
     dispatch(clearCart())
     window.location.reload();
-    
   };
 
   const options = [
