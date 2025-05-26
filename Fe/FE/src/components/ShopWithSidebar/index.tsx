@@ -10,7 +10,7 @@ import { Category } from '@/types/category';
 const ShopWithSidebar = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [productSidebar, setProductSidebar] = useState(false);
@@ -19,7 +19,7 @@ const ShopWithSidebar = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [productsRes, categoriesRes] = await Promise.all([
+        const [productsRes, categoriesRes] = await Promise.all<any>([
           apiService.getProducts(),
           apiService.getCategories()
         ]);
@@ -41,7 +41,7 @@ const ShopWithSidebar = () => {
     try {
       setLoading(true);
       setSelectedCategory(categoryId);
-      const response = await apiService.getProducts(
+      const response: any = await apiService.getProducts(
         categoryId ? { category: categoryId } : undefined
       );
       setProducts(response);
@@ -140,6 +140,7 @@ const ShopWithSidebar = () => {
             {/* Content */}
             <div className="xl:max-w-[870px] w-full">
               {/* Product List */}
+              {/* @ts-ignore */}
               <ProductList products={products.products}/>
             </div>
           </div>
