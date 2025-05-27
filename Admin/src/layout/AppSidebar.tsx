@@ -23,7 +23,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
-    name: "Bảng điều khiển",
+    name: "Thống kê",
     subItems: [{ name: "Thương mại điện tử", path: "/", pro: false }],
   },
   {
@@ -34,7 +34,7 @@ const navItems: NavItem[] = [
     ],
   },
 
- 
+
 ];
 
 const AppSidebar: React.FC = () => {
