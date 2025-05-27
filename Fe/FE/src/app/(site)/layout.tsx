@@ -20,7 +20,7 @@ import { Toaster } from "react-hot-toast";
 import { useAppDispatch, useAppSelector } from "@/redux/store";
 
 let timeoutId;
-export default function SiteLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -28,35 +28,39 @@ export default function SiteLayout({
   const [loading, setLoading] = useState<boolean>(true);
   
   useEffect(() => {
+
     timeoutId = setTimeout(() => setLoading(false), 1000);
+
     return () => clearTimeout(timeoutId)
   }, []);
 
   return (
-    <>
-      {loading ? (
-        <PreLoader />
-      ) : (
-        <>
-          <ReduxProvider>
-            <CartModalProvider>
-              <ModalProvider>
-                <PreviewSliderProvider>
-                  <Header />
-                  {children}
-                  <QuickViewModal />
-                  <CartSidebarModal />
-                  <PreviewSliderModal />
-                  <Chatbot />
-                </PreviewSliderProvider>
-              </ModalProvider>
-            </CartModalProvider>
-          </ReduxProvider>
-          <ScrollToTop />
-          <Footer />
-          <Toaster position="top-right" />
-        </>
-      )}
-    </>
+    <html lang="en" suppressHydrationWarning={true}>
+      <body>
+        {loading ? (
+          <PreLoader />
+        ) : (
+          <>
+            <ReduxProvider>
+              <CartModalProvider>
+                <ModalProvider>
+                  <PreviewSliderProvider>
+                    <Header />
+                    {children}
+                    <QuickViewModal />
+                    <CartSidebarModal />
+                    <PreviewSliderModal />
+                    <Chatbot />
+                  </PreviewSliderProvider>
+                </ModalProvider>
+              </CartModalProvider>
+            </ReduxProvider>
+            <ScrollToTop />
+            <Footer />
+            <Toaster position="top-right" />
+          </>
+        )}
+      </body>
+    </html>
   );
 }

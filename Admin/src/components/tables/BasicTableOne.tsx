@@ -110,7 +110,7 @@ export default function CustomerTable() {
                           <Image
                             width={40}
                             height={40}
-                            src={user.avatar && user.avatar.startsWith('http') ? user.avatar : "/images/user/default-avatar.jpg"}
+                            src={user.avatar || "/images/user/default-avatar.jpg"}
                             alt={user.fullName}
                           />
                         </div>
@@ -138,7 +138,7 @@ export default function CustomerTable() {
                     </TableCell>
                     <TableCell className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <button 
+                        <button
                           className="text-blue-600 hover:text-blue-700 text-xs font-medium"
                           onClick={() => handleViewDetails(user._id)}
                         >

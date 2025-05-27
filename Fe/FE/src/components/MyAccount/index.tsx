@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import apiService from "@/services/api";
 import { Address } from "@/types/address";
+import { logout, setLogin } from "@/redux/features/authSlice";
+import { useAppDispatch } from "@/redux/store";
 
 const MyAccount = () => {
   const router = useRouter();
@@ -36,6 +38,7 @@ const MyAccount = () => {
   });
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [editAddress, setEditAddress] = useState<Address | null>(null);
+  const dispatch = useAppDispatch()
 
   useEffect(() => {
     fetchUserData();
@@ -104,13 +107,13 @@ const MyAccount = () => {
         });
         toast.success('Cập nhật mật khẩu thành công');
       }
-      
+
       await apiService.updateProfile({
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone
       });
-      
+
       toast.success('Cập nhật thông tin thành công');
       fetchUserData();
     } catch (error: any) {
@@ -123,10 +126,11 @@ const MyAccount = () => {
 
   const handleLogout = async () => {
     try {
-      await apiService.logout();
+      // await apiService.logout();
+      dispatch(logout())
       router.push('/signin');
     } catch (error) {
-      console.error('Lỗi khi đăng xuất:', error);
+      console.log('Lỗi khi đăng xuất:', error);
       toast.error('Không thể đăng xuất');
     }
   };
@@ -333,7 +337,7 @@ const MyAccount = () => {
 
                     <button
                       onClick={handleLogout}
-                      className="flex items-center rounded-md gap-2.5 py-3 px-4.5 ease-out duration-200 hover:bg-red-500 hover:text-white text-dark-2 bg-gray-1"
+                      className="flex items-center rounded-md gap-2.5 py-3 px-4.5 ease-out duration-200 hover:bg-red hover:text-white text-dark-2 bg-gray-1"
                     >
                       <svg
                         className="fill-current"
@@ -413,7 +417,7 @@ const MyAccount = () => {
                         className={`relative border rounded-2xl p-8 bg-white shadow-lg transition-shadow hover:shadow-2xl flex flex-col h-full w-full max-w-xs ${address.isDefault ? 'border-green-500 bg-green-50' : 'border-gray-300'}`}
                       >
                         {address.isDefault && (
-                          
+
                           <span className="absolute -top-4 right-4 flex items-center gap-1 text-sm px-4 py-1 rounded-full font-bold shadow-lg z-10 bg-green-light text-white">
                             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                             Mặc định
@@ -483,7 +487,7 @@ const MyAccount = () => {
                       />
                     </div>
                       <div>
-                        <label className="block text-sm font-medium mb-2">Email</label>
+                        <label className="block text-sm font-medium mb-2">Số điện thoại</label>
                         <input
                           type="tel"
                           name="phone"
