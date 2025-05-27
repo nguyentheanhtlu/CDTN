@@ -1,6 +1,13 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import { ICategory } from './category.model';
 
+export interface IProductReview {
+    user: mongoose.Types.ObjectId;
+    rating: number; // 1-5
+    comment?: string;
+    createdAt: Date;
+}
+
 export interface IProduct extends Document {
     name: string;
     description: string;
@@ -13,6 +20,9 @@ export interface IProduct extends Document {
     isAvailable: boolean;
     createdAt: Date;
     updatedAt: Date;
+    reviews?: IProductReview[];
+    averageRating?: number;
+    reviewCount?: number;
 }
 
 const productSchema = new Schema<IProduct>({
@@ -58,6 +68,24 @@ const productSchema = new Schema<IProduct>({
     isAvailable: {
         type: Boolean,
         default: true
+    },
+    reviews: [
+        {
+            user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+            rating: { type: Number, required: true, min: 1, max: 5 },
+            comment: { type: String },
+            createdAt: { type: Date, default: Date.now }
+        }
+    ],
+    averageRating: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5
+    },
+    reviewCount: {
+        type: Number,
+        default: 0
     }
 }, {
     timestamps: true

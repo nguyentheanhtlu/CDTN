@@ -1,11 +1,30 @@
-export type Product = {
-  title: string;
-  reviews: number;
-  price: number;
+import { Category } from './category';
+import { Review } from './review';
+
+export interface Product {
   discountedPrice: number;
-  id: number;
-  imgs?: {
-    thumbnails: string[];
-    previews: string[];
-  };
-};
+  title: string;
+  _id: string;
+  name: string;
+  description: string;
+  price: number;
+  discount: number;
+  images: any;
+  category: string | Category;
+  stock: number;
+  sold: number;
+  isAvailable: boolean;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  averageRating: number;
+  reviewCount: number;
+  reviews: Review[];
+}
+
+export interface ProductResponse {
+  products: Product[];
+  total: number;
+  page: number;
+  totalPages: number;
+}

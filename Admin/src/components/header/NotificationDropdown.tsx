@@ -56,7 +56,7 @@ export default function NotificationDropdown() {
       >
         <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-100 dark:border-gray-700">
           <h5 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-            Notification
+            Thông báo
           </h5>
           <button
             onClick={toggleDropdown}
@@ -90,7 +90,7 @@ export default function NotificationDropdown() {
                   width={40}
                   height={40}
                   src="/images/user/user-02.jpg"
-                  alt="User"
+                  alt="Người dùng"
                   className="w-full overflow-hidden rounded-full"
                 />
                 <span className="absolute bottom-0 right-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white bg-success-500 dark:border-gray-900"></span>
@@ -101,16 +101,16 @@ export default function NotificationDropdown() {
                   <span className="font-medium text-gray-800 dark:text-white/90">
                     Terry Franci
                   </span>
-                  <span>requests permission to change</span>
+                  <span>yêu cầu quyền thay đổi</span>
                   <span className="font-medium text-gray-800 dark:text-white/90">
-                    Project - Nganter App
+                    Dự án - Ứng dụng Nganter
                   </span>
                 </span>
 
                 <span className="flex items-center gap-2 text-gray-500 text-theme-xs dark:text-gray-400">
-                  <span>Project</span>
+                  <span>Dự án</span>
                   <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                  <span>5 min ago</span>
+                  <span>5 phút trước</span>
                 </span>
               </span>
             </DropdownItem>
@@ -126,7 +126,7 @@ export default function NotificationDropdown() {
                   width={40}
                   height={40}
                   src="/images/user/user-03.jpg"
-                  alt="User"
+                  alt="Người dùng"
                   className="w-full overflow-hidden rounded-full"
                 />
                 <span className="absolute bottom-0 right-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white bg-success-500 dark:border-gray-900"></span>
@@ -137,16 +137,16 @@ export default function NotificationDropdown() {
                   <span className="font-medium text-gray-800 dark:text-white/90">
                     Alena Franci
                   </span>
-                  <span> requests permission to change</span>
+                  <span> yêu cầu quyền thay đổi</span>
                   <span className="font-medium text-gray-800 dark:text-white/90">
-                    Project - Nganter App
+                    Dự án - Ứng dụng Nganter
                   </span>
                 </span>
 
                 <span className="flex items-center gap-2 text-gray-500 text-theme-xs dark:text-gray-400">
-                  <span>Project</span>
+                  <span>Dự án</span>
                   <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                  <span>8 min ago</span>
+                  <span>8 phút trước</span>
                 </span>
               </span>
             </DropdownItem>
@@ -163,7 +163,7 @@ export default function NotificationDropdown() {
                   width={40}
                   height={40}
                   src="/images/user/user-04.jpg"
-                  alt="User"
+                  alt="Người dùng"
                   className="w-full overflow-hidden rounded-full"
                 />
                 <span className="absolute bottom-0 right-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white bg-success-500 dark:border-gray-900"></span>
@@ -174,16 +174,16 @@ export default function NotificationDropdown() {
                   <span className="font-medium text-gray-800 dark:text-white/90">
                     Jocelyn Kenter
                   </span>
-                  <span>requests permission to change</span>
+                  <span>yêu cầu quyền thay đổi</span>
                   <span className="font-medium text-gray-800 dark:text-white/90">
-                    Project - Nganter App
+                    Dự án - Ứng dụng Nganter
                   </span>
                 </span>
 
                 <span className="flex items-center gap-2 text-gray-500 text-theme-xs dark:text-gray-400">
-                  <span>Project</span>
+                  <span>Dự án</span>
                   <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                  <span>15 min ago</span>
+                  <span>15 phút trước</span>
                 </span>
               </span>
             </DropdownItem>

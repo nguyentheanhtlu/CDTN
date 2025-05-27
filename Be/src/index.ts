@@ -11,10 +11,14 @@ import productRoutes from './routes/product.routes';
 import cartRoutes from './routes/cart.routes';
 import orderRoutes from './routes/order.routes';
 import blogRoutes from './routes/blog.routes';
+import categoryRoutes from './routes/category.routes';
+import uploadRoutes from './routes/upload.routes';
+import paymentRoutes from './routes/payment.routes';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import chatRoutes from './routes/chat.routes';
 import { ChatService } from './services/chat.service';
+import chatbotRoutes from './routes/chatbot.routes';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -38,6 +42,10 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/category', categoryRoutes);
+app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // Basic route
 app.get('/', (req, res) => {
@@ -64,7 +72,6 @@ const io = new Server(httpServer, {
 
 // Khởi tạo ChatService
 new ChatService(io);
-
 // Sử dụng httpServer thay vì app.listen
 httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

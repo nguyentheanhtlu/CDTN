@@ -1,82 +1,120 @@
-import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RootState } from "../store";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { RootState, store } from "../store";
+import apiService from "@/api/apiService";
+import { addToCart, loadCart } from "../actions/cart.action";
+import { stat } from "node:fs";
 
-type InitialState = {
-  items: CartItem[];
-};
-
-type CartItem = {
-  id: number;
-  title: string;
-  price: number;
-  discountedPrice: number;
-  quantity: number;
-  imgs?: {
-    thumbnails: string[];
-    previews: string[];
+interface CartItem {
+  _id: string;
+  product: {
+    _id: string;
+    name: string;
+    price: number;
+    images: string[];
   };
+  quantity: number;
+  price: number;
+}
+
+interface Cart {
+  _id: string;
+  user: string;
+  items: CartItem[];
+  totalAmount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CartState {
+  cart: Cart | null;
+  loading: boolean;
+  error: string | null;
 };
 
-const initialState: InitialState = {
-  items: [],
+const initialState: CartState = {
+  cart: null,
+  loading: false,
+  error: null,
 };
 
 export const cart = createSlice({
   name: "cart",
   initialState,
   reducers: {
-    addItemToCart: (state, action: PayloadAction<CartItem>) => {
-      const { id, title, price, quantity, discountedPrice, imgs } =
-        action.payload;
-      const existingItem = state.items.find((item) => item.id === id);
-
-      if (existingItem) {
-        existingItem.quantity += quantity;
-      } else {
-        state.items.push({
-          id,
-          title,
-          price,
-          quantity,
-          discountedPrice,
-          imgs,
-        });
+    setCart: (state, action: PayloadAction<Cart>) => {
+      state.cart = action.payload;
+    },
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.loading = action.payload;
+    },
+    setError: (state, action: PayloadAction<string | null>) => {
+      state.error = action.payload;
+    },
+    clearCart: (state) => {
+      state.cart = null;
+    },
+    updateItemQuantity: (state, action: PayloadAction<{ itemId: string; quantity: number }>) => {
+      if (state.cart) {
+        const item = state.cart.items.find(item => item._id === action.payload.itemId);
+        if (item) {
+          item.quantity = action.payload.quantity;
+          // Cập nhật tổng tiền
+          state.cart.totalAmount = state.cart.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+        }
       }
-    },
-    removeItemFromCart: (state, action: PayloadAction<number>) => {
-      const itemId = action.payload;
-      state.items = state.items.filter((item) => item.id !== itemId);
-    },
-    updateCartItemQuantity: (
-      state,
-      action: PayloadAction<{ id: number; quantity: number }>
-    ) => {
-      const { id, quantity } = action.payload;
-      const existingItem = state.items.find((item) => item.id === id);
-
-      if (existingItem) {
-        existingItem.quantity = quantity;
-      }
-    },
-
-    removeAllItemsFromCart: (state) => {
-      state.items = [];
-    },
+    }
   },
+  extraReducers: builder => {
+    builder
+      .addCase(loadCart.pending, (state, action) => {
+        state.loading = true
+      })
+      .addCase(loadCart.fulfilled, (state, action) => {
+        state.cart = action.payload;
+        state.loading = false
+      })
+      .addCase(loadCart.rejected, (state, action) => {
+        console.log(action.payload)
+        state.loading = false
+      })
+      .addCase(addToCart.pending, (state, action) => {
+        state.loading = true
+      })
+      .addCase(addToCart.fulfilled, (state, action) => {
+        state.cart = action.payload;
+        state.loading = false
+        state.error = null
+      })
+      .addCase(addToCart.rejected, (state, action) => {
+        console.log(action.payload)
+        state.loading = false
+      })
+  }
 });
 
-export const selectCartItems = (state: RootState) => state.cartReducer.items;
+// Selectors
+export const selectCart = (state: RootState) => state.cart.cart;
+export const selectCartLoading = (state: RootState) => state.cart.loading;
+export const selectCartError = (state: RootState) => state.cart.error;
 
-export const selectTotalPrice = createSelector([selectCartItems], (items) => {
-  return items.reduce((total, item) => {
-    return total + item.discountedPrice * item.quantity;
-  }, 0);
-});
+// Thêm các selector mới
+export const selectCartItems = (state: RootState) => state.cart.cart?.items || [];
+export const selectTotalPrice = (state: RootState) => state.cart.cart?.totalAmount || 0;
 
-export const {
-  addItemToCart,
-  removeItemFromCart,
-  updateCartItemQuantity,
-  removeAllItemsFromCart,
-} = cart.actions;
+export const removeItemFromCart = (itemId: string) => async (dispatch: any) => {
+  try {
+    dispatch(setLoading(true));
+    const updatedCart = await apiService.removeFromCart(itemId);
+    dispatch(setCart(updatedCart));
+    dispatch(setError(null));
+  } catch (error) {
+    console.error('Error removing item from cart:', error);
+    dispatch(setError(error instanceof Error ? error.message : 'Failed to remove item from cart'));
+    throw error;
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
+export const { setCart, setLoading, setError, clearCart, updateItemQuantity } = cart.actions;
 export default cart.reducer;

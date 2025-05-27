@@ -5,7 +5,7 @@ const Login = () => {
 
   return (
     <div className="bg-white shadow-1 rounded-[10px]">
-      <div
+      {/* <div
         onClick={() => setDropdown(!dropdown)}
         className={`cursor-pointer flex items-center gap-0.5 py-5 px-5.5 ${
           dropdown && "border-b border-gray-3"
@@ -32,7 +32,7 @@ const Login = () => {
             />
           </svg>
         </span>
-      </div>
+      </div> */}
 
       {/* <!-- dropdown menu --> */}
       <div

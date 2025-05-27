@@ -1,35 +1,49 @@
 import React, { useState } from "react";
-import { AppDispatch } from "@/redux/store";
-import { useDispatch } from "react-redux";
-import {
-  removeItemFromCart,
-  updateCartItemQuantity,
-} from "@/redux/features/cart-slice";
-
+import { useAppDispatch } from "@/redux/store";
 import Image from "next/image";
+import toast from "react-hot-toast";
+import { addToCart } from "@/redux/actions/cart.action";
 
-const SingleItem = ({ item }) => {
+interface CartItemProps {
+  item: {
+    _id: string;
+    product: {
+      _id: string;
+      name: string;
+      price: number;
+      images: string[];
+    };
+    quantity: number;
+    price: number;
+  };
+}
+
+const SingleItem: React.FC<CartItemProps> = ({ item }) => {
   const [quantity, setQuantity] = useState(item.quantity);
+  const dispatch = useAppDispatch();
 
-  const dispatch = useDispatch<AppDispatch>();
-
-  const handleRemoveFromCart = () => {
-    dispatch(removeItemFromCart(item.id));
+  const handleUpdateQuantity = async (newQuantity: number) => {
+    if (newQuantity < 1) return;
+    try {
+      dispatch(addToCart({ productId: item.product._id, quantity }));
+      setQuantity(newQuantity);
+    } catch (error) {
+      toast.error('Cập nhật số lượng thất bại');
+    }
   };
 
   const handleIncreaseQuantity = () => {
-    setQuantity(quantity + 1);
-    dispatch(updateCartItemQuantity({ id: item.id, quantity: quantity + 1 }));
+    handleUpdateQuantity(quantity + 1);
   };
 
   const handleDecreaseQuantity = () => {
     if (quantity > 1) {
-      setQuantity(quantity - 1);
-      dispatch(updateCartItemQuantity({ id: item.id, quantity: quantity - 1 }));
-    } else {
-      return;
+      handleUpdateQuantity(quantity - 1);
     }
   };
+
+  // Kiểm tra và lấy ảnh sản phẩm
+  const productImage = item.product?.images?.[0] || '/images/placeholder.png';
 
   return (
     <div className="flex items-center border-t border-gray-3 py-5 px-7.5">
@@ -37,12 +51,18 @@ const SingleItem = ({ item }) => {
         <div className="flex items-center justify-between gap-5">
           <div className="w-full flex items-center gap-5.5">
             <div className="flex items-center justify-center rounded-[5px] bg-gray-2 max-w-[80px] w-full h-17.5">
-              <Image width={200} height={200} src={item.imgs?.thumbnails[0]} alt="product" />
+              <Image
+                width={200}
+                height={200}
+                src={productImage}
+                alt={item.product?.name || 'Hình ảnh sản phẩm'}
+                className="object-contain"
+              />
             </div>
 
             <div>
               <h3 className="text-dark ease-out duration-200 hover:text-blue">
-                <a href="#"> {item.title} </a>
+                {item.product?.name || 'Sản phẩm'}
               </h3>
             </div>
           </div>
@@ -50,14 +70,14 @@ const SingleItem = ({ item }) => {
       </div>
 
       <div className="min-w-[180px]">
-        <p className="text-dark">${item.discountedPrice}</p>
+        <p className="text-dark">{item.price.toLocaleString('vi-VN')}đ</p>
       </div>
 
       <div className="min-w-[275px]">
         <div className="w-max flex items-center rounded-md border border-gray-3">
           <button
-            onClick={() => handleDecreaseQuantity()}
-            aria-label="button for remove product"
+            onClick={handleDecreaseQuantity}
+            aria-label="nút giảm số lượng sản phẩm"
             className="flex items-center justify-center w-11.5 h-11.5 ease-out duration-200 hover:text-blue"
           >
             <svg
@@ -80,8 +100,8 @@ const SingleItem = ({ item }) => {
           </span>
 
           <button
-            onClick={() => handleIncreaseQuantity()}
-            aria-label="button for add product"
+            onClick={handleIncreaseQuantity}
+            aria-label="nút tăng số lượng sản phẩm"
             className="flex items-center justify-center w-11.5 h-11.5 ease-out duration-200 hover:text-blue"
           >
             <svg
@@ -106,13 +126,13 @@ const SingleItem = ({ item }) => {
       </div>
 
       <div className="min-w-[200px]">
-        <p className="text-dark">${item.discountedPrice * quantity}</p>
+        <p className="text-dark">{(item.price * quantity).toLocaleString('vi-VN')}đ</p>
       </div>
 
-      <div className="min-w-[50px] flex justify-end">
+      <div className="min-w-[50px]">
         <button
-          onClick={() => handleRemoveFromCart()}
-          aria-label="button for remove product from cart"
+          onClick={() => handleUpdateQuantity(0)}
+          aria-label="nút xóa sản phẩm khỏi giỏ hàng"
           className="flex items-center justify-center rounded-lg max-w-[38px] w-full h-9.5 bg-gray-2 border border-gray-3 text-dark ease-out duration-200 hover:bg-red-light-6 hover:border-red-light-4 hover:text-red"
         >
           <svg

@@ -1,18 +1,53 @@
-import React from "react";
+"use client";
+import React, { useEffect, useState } from "react";
 import Breadcrumb from "../Common/Breadcrumb";
-import blogData from "./blogData";
-import BlogItem from "../Blog/BlogItem";
+import BlogItem from "./BlogItem";
+import { apiService } from "@/services/api.service";
+import { Blog } from "../../types/blog";
 
 const BlogGrid = () => {
+  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        setLoading(true);
+        const response = await apiService.getBlogs();
+        setBlogs(response.data.blogs);
+        setError(null);
+      } catch (err) {
+        setError('Failed to fetch blogs');
+        console.error('Error fetching blogs:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBlogs();
+  }, []);
+
+  if (loading) {
+    return <div className="text-center py-8">Loading blogs...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-red-500">{error}</div>;
+  }
+
+  if (!blogs.length) {
+    return <div className="text-center py-8">No blogs found</div>;
+  }
+
   return (
     <>
-      <Breadcrumb title={"Blog Grid"} pages={["blog grid"]} />{" "}
+      <Breadcrumb title={"Blog Grid"} pages={["blog grid"]} />
       <section className="overflow-hidden py-20 bg-gray-2">
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-10 gap-x-7.5">
-            {/* <!-- blog item --> */}
-            {blogData.map((blog, key) => (
-              <BlogItem blog={blog} key={key} />
+            {blogs.map((blog) => (
+              <BlogItem key={blog._id} blog={blog} />
             ))}
           </div>
 

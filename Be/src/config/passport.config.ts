@@ -2,8 +2,13 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { googleConfig } from './google.config';
 import { User } from '../models/user.model';
+import { Profile } from 'passport-google-oauth20';
 
 export const configurePassport = () => {
+    if (!googleConfig.clientID || !googleConfig.clientSecret || !googleConfig.callbackURL) {
+        throw new Error('Google OAuth configuration is incomplete');
+    }
+
     passport.use(new GoogleStrategy({
         clientID: googleConfig.clientID || '746029902730-11og3rf9cg9hoor2c3vdqc1tum125tot.apps.googleusercontent.com',
         clientSecret: googleConfig.clientSecret || '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',

@@ -1,30 +1,32 @@
-import { Router, Request, Response, NextFunction } from 'express';
-import * as userController from '../controllers/user.controller';
-import { authenticateToken } from '../middlewares/auth.middleware';
-import { uploadAvatar } from '../middlewares/upload.middleware';
+import { Router } from 'express';
+import { getProfile, updateProfile, changePassword, updateAvatar, grantVoucherToUser, removeVoucherFromUser, getUserVouchers, getAllUsersWithVouchers, getUserVoucherHistory, getUserAddresses, addUserAddress, updateUserAddress, deleteUserAddress, setDefaultUserAddress, getAllUsers, getUserById } from '../controllers/user.controller';
+import { authenticateToken, isAdmin } from '../middlewares/auth.middleware';
+import { upload } from '../middlewares/upload.middleware';
 
 const router = Router();
 
-// Middleware để xác thực cho tất cả routes
-router.use((req: Request, res: Response, next: NextFunction) => {
-    authenticateToken(req as any, res, next);
-});
+// Routes với authentication
+router.get('/profile', authenticateToken, getProfile);
+router.put('/profile', authenticateToken, updateProfile);
+router.put('/password', authenticateToken, changePassword);
+router.put('/avatar', authenticateToken, upload.single('avatar'), updateAvatar);
 
-// Cast request type để phù hợp với controller
-router.get('/profile', (req: Request, res: Response, next: NextFunction) => {
-    userController.getProfile(req as any, res).catch(next);
-});
+// Address routes (chỉ cần authentication)
+router.get('/addresses', authenticateToken, getUserAddresses);
+router.post('/addresses', authenticateToken, addUserAddress);
+router.put('/addresses/:id', authenticateToken, updateUserAddress);
+router.delete('/addresses/:id', authenticateToken, deleteUserAddress);
+router.put('/addresses/:id/default', authenticateToken, setDefaultUserAddress);
 
-router.put('/profile', (req: Request, res: Response, next: NextFunction) => {
-    userController.updateProfile(req as any, res).catch(next);
-});
+// Voucher routes (chỉ cần authentication)
+router.get('/vouchers', authenticateToken, getUserVouchers);
+router.get('/voucher-history', authenticateToken, getUserVoucherHistory);
 
-router.put('/change-password', (req: Request, res: Response, next: NextFunction) => {
-    userController.changePassword(req as any, res).catch(next);
-});
-
-router.put('/avatar', uploadAvatar, (req: Request, res: Response, next: NextFunction) => {
-    userController.updateAvatar(req as any, res).catch(next);
-});
+// Admin routes
+router.get('/admin/all-users', authenticateToken, isAdmin, getAllUsers);
+router.get('/:id', authenticateToken, isAdmin, getUserById);
+router.post('/:userId/voucher', authenticateToken, isAdmin, grantVoucherToUser);
+router.delete('/:userId/voucher/:voucherId', authenticateToken, isAdmin, removeVoucherFromUser);
+router.get('/admin/all-users-with-vouchers', authenticateToken, isAdmin, getAllUsersWithVouchers);
 
 export default router; 

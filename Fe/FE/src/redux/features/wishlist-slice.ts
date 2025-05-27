@@ -1,63 +1,31 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { Product } from "@/types/product";
 
-type InitialState = {
-  items: WishListItem[];
-};
+export interface WishlistState {
+  items: Product[];
+}
 
-type WishListItem = {
-  id: number;
-  title: string;
-  price: number;
-  discountedPrice: number;
-  quantity: number;
-  status?: string;
-  imgs?: {
-    thumbnails: string[];
-    previews: string[];
-  };
-};
-
-const initialState: InitialState = {
+const initialState: WishlistState = {
   items: [],
 };
 
-export const wishlist = createSlice({
+export const wishlistSlice = createSlice({
   name: "wishlist",
   initialState,
   reducers: {
-    addItemToWishlist: (state, action: PayloadAction<WishListItem>) => {
-      const { id, title, price, quantity, imgs, discountedPrice, status } =
-        action.payload;
-      const existingItem = state.items.find((item) => item.id === id);
-
-      if (existingItem) {
-        existingItem.quantity += quantity;
-      } else {
-        state.items.push({
-          id,
-          title,
-          price,
-          quantity,
-          imgs,
-          discountedPrice,
-          status,
-        });
+    addItemToWishlist: (state, action: PayloadAction<Product>) => {
+      const item = action.payload;
+      if (!state.items.find(i => i._id === item._id)) {
+        state.items.push(item);
       }
     },
-    removeItemFromWishlist: (state, action: PayloadAction<number>) => {
-      const itemId = action.payload;
-      state.items = state.items.filter((item) => item.id !== itemId);
+    removeFromWishlist: (state, action: PayloadAction<string>) => {
+      state.items = state.items.filter(item => item._id !== action.payload);
     },
-
-    removeAllItemsFromWishlist: (state) => {
+    clearWishlist: (state) => {
       state.items = [];
     },
   },
 });
 
-export const {
-  addItemToWishlist,
-  removeItemFromWishlist,
-  removeAllItemsFromWishlist,
-} = wishlist.actions;
-export default wishlist.reducer;
+export const { addItemToWishlist, removeFromWishlist, clearWishlist } = wishlistSlice.actions;

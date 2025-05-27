@@ -1,44 +1,86 @@
-import React, { useRef, useEffect } from "react";
+import React, { useEffect } from "react";
 import OrderDetails from "./OrderDetails";
 import EditOrder from "./EditOrder";
+import { Order } from "@/types/order";
 
-const OrderModal = ({ showDetails, showEdit, toggleModal, order }: any) => {
+interface OrderModalProps {
+  showDetails: boolean;
+  showEdit: boolean;
+  toggleModal: (status: boolean) => void;
+  order: Order;
+}
+
+const OrderModal: React.FC<OrderModalProps> = ({ showDetails, showEdit, toggleModal, order }) => {
+  // Handle escape key press
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        toggleModal(false);
+      }
+    };
+
+    if (showDetails || showEdit) {
+      document.addEventListener('keydown', handleEscape);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [showDetails, showEdit, toggleModal]);
+
   if (!showDetails && !showEdit) {
     return null;
   }
 
+  // Handle click outside to close
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      toggleModal(false);
+    }
+  };
+
   return (
-    <>
-      <div
-        className={`backdrop-filter-sm visible fixed left-0 top-0 z-[99999] flex min-h-screen w-full justify-center items-center bg-[#000]/40 px-4 py-8 sm:px-8`}
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300"
+      onClick={handleBackdropClick}
+    >
+      <div 
+        className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto transform transition-all duration-300"
+        onClick={e => e.stopPropagation()}
       >
-        <div className="shadow-7 relative w-full max-w-[600px] h-[242px] scale-100 transform rounded-[15px] bg-white transition-all flex flex-col justify-center items-center">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-gray-900">
+            {showDetails ? 'Chi tiết đơn hàng' : 'Chỉnh sửa đơn hàng'}
+          </h2>
           <button
             onClick={() => toggleModal(false)}
-            className="text-body absolute -right-6 -top-6 z-[9999] flex h-11.5 w-11.5 items-center justify-center rounded-full border-2 border-stroke bg-white hover:text-dark"
+            className="text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
           >
             <svg
-              width="24"
-              height="24"
-              viewBox="0 0 25 24"
+              className="w-6 h-6"
               fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
               <path
-                d="M12.9983 10.586L17.9483 5.63603L19.3623 7.05003L14.4123 12L19.3623 16.95L17.9483 18.364L12.9983 13.414L8.04828 18.364L6.63428 16.95L11.5843 12L6.63428 7.05003L8.04828 5.63603L12.9983 10.586Z"
-                fill="currentColor"
-              ></path>
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
+        </div>
 
-          <>
-            {showDetails && <OrderDetails orderItem={order} />}
-
-            {showEdit && <EditOrder order={order} toggleModal={toggleModal} />}
-          </>
+        <div className="p-6">
+          {showDetails && <OrderDetails orderItem={order} />}
+          {showEdit && <EditOrder order={order} toggleModal={toggleModal} />}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
