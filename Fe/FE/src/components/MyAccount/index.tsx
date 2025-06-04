@@ -36,6 +36,14 @@ const MyAccount = () => {
     newPassword: "",
     confirmNewPassword: ""
   });
+  const [errors, setErrors] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    oldPassword: "",
+    newPassword: "",
+    confirmNewPassword: ""
+  });
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [editAddress, setEditAddress] = useState<Address | null>(null);
   const dispatch = useAppDispatch()
@@ -92,15 +100,82 @@ const MyAccount = () => {
     }));
   };
 
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = {
+      firstName: "",
+      lastName: "",
+      phone: "",
+      oldPassword: "",
+      newPassword: "",
+      confirmNewPassword: ""
+    };
+
+    // Validate firstName
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "Vui lòng nhập họ";
+      isValid = false;
+    } else if (formData.firstName.length < 2) {
+      newErrors.firstName = "Họ phải có ít nhất 2 ký tự";
+      isValid = false;
+    }
+
+    // Validate lastName
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "Vui lòng nhập tên";
+      isValid = false;
+    } else if (formData.lastName.length < 2) {
+      newErrors.lastName = "Tên phải có ít nhất 2 ký tự";
+      isValid = false;
+    }
+
+    // Validate phone
+    if (formData.phone) {
+      const phoneRegex = /^[0-9]{10}$/;
+      if (!phoneRegex.test(formData.phone)) {
+        newErrors.phone = "Số điện thoại không hợp lệ";
+        isValid = false;
+      }
+    }
+
+    // Validate password fields if any password field is filled
+    if (formData.oldPassword || formData.newPassword || formData.confirmNewPassword) {
+      if (!formData.oldPassword) {
+        newErrors.oldPassword = "Vui lòng nhập mật khẩu hiện tại";
+        isValid = false;
+      }
+
+      if (!formData.newPassword) {
+        newErrors.newPassword = "Vui lòng nhập mật khẩu mới";
+        isValid = false;
+      } else if (formData.newPassword.length < 6) {
+        newErrors.newPassword = "Mật khẩu phải có ít nhất 6 ký tự";
+        isValid = false;
+      }
+
+      if (!formData.confirmNewPassword) {
+        newErrors.confirmNewPassword = "Vui lòng xác nhận mật khẩu mới";
+        isValid = false;
+      } else if (formData.newPassword !== formData.confirmNewPassword) {
+        newErrors.confirmNewPassword = "Mật khẩu xác nhận không khớp";
+        isValid = false;
+      }
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
     try {
       setLoading(true);
       if (formData.newPassword) {
-        if (formData.newPassword !== formData.confirmNewPassword) {
-          toast.error('Mật khẩu mới không khớp');
-          return;
-        }
         await apiService.updatePassword({
           oldPassword: formData.oldPassword,
           newPassword: formData.newPassword
@@ -471,9 +546,12 @@ const MyAccount = () => {
                         name="firstName"
                         value={formData.firstName}
                         onChange={handleInputChange}
-                          className="w-full px-4 py-2 border rounded-md"
-                          required
+                        className={`w-full px-4 py-2 border rounded-md ${errors.firstName ? 'border-red-500' : ''}`}
+                        required
                       />
+                      {errors.firstName && (
+                        <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>
+                      )}
                     </div>
                       <div>
                         <label className="block text-sm font-medium mb-2">Tên</label>
@@ -482,9 +560,12 @@ const MyAccount = () => {
                         name="lastName"
                         value={formData.lastName}
                         onChange={handleInputChange}
-                          className="w-full px-4 py-2 border rounded-md"
-                          required
+                        className={`w-full px-4 py-2 border rounded-md ${errors.lastName ? 'border-red-500' : ''}`}
+                        required
                       />
+                      {errors.lastName && (
+                        <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
+                      )}
                     </div>
                       <div>
                         <label className="block text-sm font-medium mb-2">Số điện thoại</label>
@@ -492,9 +573,12 @@ const MyAccount = () => {
                           type="tel"
                           name="phone"
                           value={formData.phone}
-                        onChange={handleInputChange}
-                          className="w-full px-4 py-2 border rounded-md"
+                          onChange={handleInputChange}
+                          className={`w-full px-4 py-2 border rounded-md ${errors.phone ? 'border-red-500' : ''}`}
                         />
+                        {errors.phone && (
+                          <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                        )}
                     </div>
                   </div>
 
@@ -507,8 +591,11 @@ const MyAccount = () => {
                       name="oldPassword"
                       value={formData.oldPassword}
                       onChange={handleInputChange}
-                          className="w-full px-4 py-2 border rounded-md"
+                      className={`w-full px-4 py-2 border rounded-md ${errors.oldPassword ? 'border-red-500' : ''}`}
                     />
+                    {errors.oldPassword && (
+                      <p className="text-red-500 text-sm mt-1">{errors.oldPassword}</p>
+                    )}
                   </div>
                       <div>
                         <label className="block text-sm font-medium mb-2">Mật khẩu mới</label>
@@ -517,8 +604,11 @@ const MyAccount = () => {
                       name="newPassword"
                       value={formData.newPassword}
                       onChange={handleInputChange}
-                          className="w-full px-4 py-2 border rounded-md"
+                      className={`w-full px-4 py-2 border rounded-md ${errors.newPassword ? 'border-red-500' : ''}`}
                     />
+                    {errors.newPassword && (
+                      <p className="text-red-500 text-sm mt-1">{errors.newPassword}</p>
+                    )}
                   </div>
                       <div>
                         <label className="block text-sm font-medium mb-2">Xác nhận mật khẩu mới</label>
@@ -527,8 +617,11 @@ const MyAccount = () => {
                       name="confirmNewPassword"
                       value={formData.confirmNewPassword}
                       onChange={handleInputChange}
-                          className="w-full px-4 py-2 border rounded-md"
+                      className={`w-full px-4 py-2 border rounded-md ${errors.confirmNewPassword ? 'border-red-500' : ''}`}
                     />
+                    {errors.confirmNewPassword && (
+                      <p className="text-red-500 text-sm mt-1">{errors.confirmNewPassword}</p>
+                    )}
                   </div>
                 </div>
 
