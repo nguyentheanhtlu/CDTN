@@ -111,17 +111,6 @@ const Header = () => {
     window.location.reload();
   };
 
-  const options = [
-    { label: "Tất cả danh mục", value: "0" },
-    { label: "Máy tính để bàn", value: "1" },
-    { label: "Laptop", value: "2" },
-    { label: "Màn hình", value: "3" },
-    { label: "Điện thoại", value: "4" },
-    { label: "Đồng hồ", value: "5" },
-    { label: "Chuột", value: "6" },
-    { label: "Máy tính bảng", value: "7" },
-  ];
-
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -150,7 +139,7 @@ const Header = () => {
         {/* <!-- header top start --> */}
         <div
           className={`flex flex-col lg:flex-row gap-5 items-end lg:items-center xl:justify-between ease-out duration-200 ${stickyMenu ? "py-4" : "py-6"}`}
-        // style={{ marginLeft: -200 }}
+        style={{ marginLeft: -100 }}
         >
           {/* <!-- header top left --> */}
           <div className="xl:w-auto flex-col sm:flex-row w-full flex sm:justify-between sm:items-center gap-5 sm:gap-10">

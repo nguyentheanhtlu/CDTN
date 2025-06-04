@@ -26,7 +26,7 @@ const Signin = () => {
     e.preventDefault();
     setError("");
     if (!form.email || !form.password) {
-      setError("Please fill all fields");
+      setError("Vui lòng nhập đủ thông tin");
       return;
     }
     setLoading(true);
@@ -37,7 +37,7 @@ const Signin = () => {
       dispatch(setLogin(true))
       router.push("/");
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Login failed");
+      setError(err?.response?.data?.message || "Đăng nhập thất bại");
     } finally {
       setLoading(false);
     }
