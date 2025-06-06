@@ -18,6 +18,8 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderItem }) => {
     });
   };
 
+  console.log(orderItem)
+
   // Get status color class
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -96,10 +98,9 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ orderItem }) => {
       <div>
         <h4 className="text-sm font-medium text-gray-500 mb-2">Địa chỉ giao hàng</h4>
         <div className="bg-gray-50 rounded-lg p-4">
-          <p className="font-medium">{orderItem.shippingAddress.fullName}</p>
+          <p className="font-medium">{orderItem.shippingAddress.name}</p>
           <p>{orderItem.shippingAddress.phone}</p>
-          <p>{orderItem.shippingAddress.street}</p>
-          <p>{`${orderItem.shippingAddress.ward}, ${orderItem.shippingAddress.district}, ${orderItem.shippingAddress.province}`}</p>
+          <p>{`${orderItem.shippingAddress.addressLine},${orderItem.shippingAddress.ward}, ${orderItem.shippingAddress.district}, ${orderItem.shippingAddress.province}`}</p>
         </div>
       </div>
 

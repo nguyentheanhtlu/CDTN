@@ -28,15 +28,13 @@ export default function RootLayout({
   const [loading, setLoading] = useState<boolean>(true);
   
   useEffect(() => {
-
     timeoutId = setTimeout(() => setLoading(false), 1000);
-
     return () => clearTimeout(timeoutId)
   }, []);
 
   return (
     <html lang="en" suppressHydrationWarning={true}>
-      <body>
+      <body suppressHydrationWarning={true}>
         {loading ? (
           <PreLoader />
         ) : (

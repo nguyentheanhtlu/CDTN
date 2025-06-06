@@ -48,7 +48,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ showDetails, showEdit, toggleMo
       onClick={handleBackdropClick}
     >
       <div 
-        className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto transform transition-all duration-300"
+        className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[70vh] overflow-y-auto transform transition-all duration-300"
         onClick={e => e.stopPropagation()}
       >
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">

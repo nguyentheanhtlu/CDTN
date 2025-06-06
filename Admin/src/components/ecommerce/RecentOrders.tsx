@@ -30,9 +30,12 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  Download,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
+import { Input } from "../ui/input";
+import * as XLSX from 'xlsx';
 
 interface Product {
   _id: string;
@@ -86,17 +89,25 @@ export default function RecentOrders() {
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
   
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [totalOrders, setTotalOrders] = useState(0);
 
-  // Calculate pagination
-  const totalPages = Math.ceil(totalOrders / pageSize);
+  // Filter orders based on search query
+  const filteredOrders = orders.filter(order => 
+    order._id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    order.user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    order.user.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Calculate pagination with filtered orders
+  const totalPages = Math.ceil(filteredOrders.length / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const currentOrders = orders.slice(startIndex, endIndex);
+  const currentOrders = filteredOrders.slice(startIndex, endIndex);
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -240,6 +251,61 @@ export default function RecentOrders() {
     }
   };
 
+  const handleExportExcel = () => {
+    try {
+      // Prepare data for Excel
+      const excelData = filteredOrders.map(order => ({
+        'Mã đơn hàng': order._id,
+        'Ngày đặt': new Date(order.createdAt).toLocaleString('vi-VN'),
+        'Khách hàng': order.user.fullName,
+        'Email': order.user.email,
+        'Số điện thoại': order.shippingAddress?.phone || 'N/A',
+        'Địa chỉ': order.shippingAddress ? 
+          `${order.shippingAddress.addressLine}, ${order.shippingAddress.ward}, ${order.shippingAddress.district}, ${order.shippingAddress.province}` 
+          : 'N/A',
+        'Tổng tiền': order.totalAmount.toLocaleString('vi-VN') + 'đ',
+        'Phương thức thanh toán': order.paymentMethod,
+        'Trạng thái thanh toán': order.paymentStatus === "PAID" ? "Đã thanh toán" :
+                                order.paymentStatus === "PENDING" ? "Chờ thanh toán" :
+                                "Thanh toán thất bại",
+        'Trạng thái đơn hàng': order.orderStatus === "PENDING" ? "Chờ xử lý" :
+                              order.orderStatus === "PROCESSING" ? "Đang xử lý" :
+                              order.orderStatus === "DELIVERED" ? "Đã giao" :
+                              "Đã hủy"
+      }));
+
+      // Create worksheet
+      const ws = XLSX.utils.json_to_sheet(excelData);
+
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Đơn hàng");
+
+      // Generate Excel file
+      const fileName = `danh-sach-don-hang-${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+
+      toast.success('Xuất file Excel thành công!', {
+        duration: 3000,
+        position: 'top-right',
+        style: {
+          background: '#333',
+          color: '#fff',
+        },
+      });
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      toast.error('Có lỗi xảy ra khi xuất file Excel', {
+        duration: 3000,
+        position: 'top-right',
+        style: {
+          background: '#333',
+          color: '#fff',
+        },
+      });
+    }
+  };
+
   return (
     <div className="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
       <div className="mb-6 flex justify-between">
@@ -251,6 +317,25 @@ export default function RecentOrders() {
             Quản lý và theo dõi đơn hàng của khách hàng
           </p>
         </div>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Input
+              type="text"
+              placeholder="Tìm kiếm đơn hàng..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-[300px]"
+            />
+          </div>
+          <Button
+            variant="outline"
+            onClick={handleExportExcel}
+            className="flex items-center gap-2 border-primary text-primary hover:bg-primary/10 dark:border-primary dark:text-primary dark:hover:bg-primary/10"
+          >
+            <Download className="h-4 w-4" />
+            Xuất Excel
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -261,9 +346,11 @@ export default function RecentOrders() {
         <div className="flex justify-center items-center py-8">
           <p className="text-red-500">{error}</p>
         </div>
-      ) : orders.length === 0 ? (
+      ) : filteredOrders.length === 0 ? (
         <div className="flex justify-center items-center py-8">
-          <p className="text-gray-600 dark:text-gray-400">Không tìm thấy đơn hàng nào</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            {searchQuery ? "Không tìm thấy đơn hàng nào phù hợp với từ khóa tìm kiếm" : "Không tìm thấy đơn hàng nào"}
+          </p>
         </div>
       ) : (
         <>

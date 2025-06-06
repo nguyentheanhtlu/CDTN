@@ -30,6 +30,12 @@ import ApiProducts from '@/api/products';
 import ApiCategories from '@/api/categories';
 import { Textarea } from '@/components/ui/textarea';
 import toast from 'react-hot-toast';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 
 interface Product {
   _id: string;
@@ -69,6 +75,34 @@ export function ProductsTable() {
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
   const [selectedProductReviews, setSelectedProductReviews] = useState<Review[]>([]);
   const [selectedProductName, setSelectedProductName] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const [totalProducts, setTotalProducts] = useState(0);
+
+  // Filter products based on search query
+  const filteredProducts = products.filter(product => 
+    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredProducts.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -83,6 +117,7 @@ export function ProductsTable() {
         status: product.stock === 0 ? 'Out of Stock' : product.stock <= 5 ? 'Low Stock' : 'In Stock'
       }));
       setProducts(productsWithStatus);
+      setTotalProducts(productsWithStatus.length);
     } catch (error) {
       console.error('Error fetching products:', error);
     }
@@ -195,103 +230,114 @@ export function ProductsTable() {
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
       <div className="flex justify-between items-center p-4 border-b border-gray-100 dark:border-white/[0.05]">
         <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">Quản lý sản phẩm</h2>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline">Thêm sản phẩm</Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px] bg-white dark:bg-gray-800">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-semibold">Thêm sản phẩm mới</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <label htmlFor="name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Tên sản phẩm
-                </label>
-                <Input
-                  id="name"
-                  placeholder="Nhập tên sản phẩm"
-                  value={newProduct.name || ''}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setNewProduct({ ...newProduct, name: e.target.value })}
-                />
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Input
+              type="text"
+              placeholder="Tìm kiếm sản phẩm..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-[300px]"
+            />
+          </div>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">Thêm sản phẩm</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px] bg-white dark:bg-gray-800">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-semibold">Thêm sản phẩm mới</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <label htmlFor="name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Tên sản phẩm
+                  </label>
+                  <Input
+                    id="name"
+                    placeholder="Nhập tên sản phẩm"
+                    value={newProduct.name || ''}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setNewProduct({ ...newProduct, name: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label htmlFor="description" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Mô tả
+                  </label>
+                  <Textarea
+                    id="description"
+                    placeholder="Nhập mô tả sản phẩm"
+                    value={newProduct.description || ''}
+                    onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label htmlFor="price" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Giá
+                  </label>
+                  <Input
+                    id="price"
+                    type="number"
+                    placeholder="Nhập giá"
+                    value={newProduct.price || ''}
+                    onChange={(e) => setNewProduct({ ...newProduct, price: parseFloat(e.target.value) })}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label htmlFor="category" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Danh mục
+                  </label>
+                  <Select
+                    value={newProduct.category}
+                    onValueChange={(value) => setNewProduct({ ...newProduct, category: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn danh mục" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category._id} value={category._id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <label htmlFor="stock" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Số lượng
+                  </label>
+                  <Input
+                    id="stock"
+                    type="number"
+                    placeholder="Nhập số lượng"
+                    value={newProduct.stock || ''}
+                    onChange={(e) => setNewProduct({ ...newProduct, stock: parseInt(e.target.value, 10) })}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label htmlFor="images" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Hình ảnh sản phẩm
+                  </label>
+                  <input
+                    id="images"
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={e => setNewProductImages(e.target.files ? Array.from(e.target.files) : [])}
+                    className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                  />
+                </div>
               </div>
-              <div className="grid gap-2">
-                <label htmlFor="description" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Mô tả
-                </label>
-                <Textarea
-                  id="description"
-                  placeholder="Nhập mô tả sản phẩm"
-                  value={newProduct.description || ''}
-                  onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <label htmlFor="price" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Giá
-                </label>
-                <Input
-                  id="price"
-                  type="number"
-                  placeholder="Nhập giá"
-                  value={newProduct.price || ''}
-                  onChange={(e) => setNewProduct({ ...newProduct, price: parseFloat(e.target.value) })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <label htmlFor="category" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Danh mục
-                </label>
-                <Select
-                  value={newProduct.category}
-                  onValueChange={(value) => setNewProduct({ ...newProduct, category: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Chọn danh mục" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category._id} value={category._id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <label htmlFor="stock" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Số lượng
-                </label>
-                <Input
-                  id="stock"
-                  type="number"
-                  placeholder="Nhập số lượng"
-                  value={newProduct.stock || ''}
-                  onChange={(e) => setNewProduct({ ...newProduct, stock: parseInt(e.target.value, 10) })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <label htmlFor="images" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Hình ảnh sản phẩm
-                </label>
-                <input
-                  id="images"
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={e => setNewProductImages(e.target.files ? Array.from(e.target.files) : [])}
-                  className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                Hủy
-              </Button>
-              <Button onClick={handleAddProduct}>Lưu sản phẩm</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                  Hủy
+                </Button>
+                <Button onClick={handleAddProduct}>Lưu sản phẩm</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Edit Dialog */}
@@ -454,7 +500,7 @@ export function ProductsTable() {
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-              {products.map((product) => (
+              {currentProducts.map((product) => (
                 <TableRow key={product._id}>
                   <TableCell className="px-5 py-4 sm:px-6 text-start">
                     <div className="flex items-center gap-3">
@@ -545,6 +591,117 @@ export function ProductsTable() {
           </Table>
         </div>
       </div>
+
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-between border-t border-stroke dark:border-strokedark px-4 py-3 sm:px-6 mt-4">
+        <div className="flex items-center gap-2">
+          <p className="text-sm text-gray-700 dark:text-gray-400">
+            Hiển thị
+            <select
+              className="mx-2 rounded border border-stroke dark:border-strokedark bg-transparent px-2 py-1 text-gray-700 dark:text-gray-400 hover:border-primary dark:hover:border-primary focus:border-primary dark:focus:border-primary focus:outline-none"
+              value={pageSize}
+              onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+            mục
+          </p>
+          <p className="text-sm text-gray-700 dark:text-gray-400">
+            Hiển thị {startIndex + 1} đến {Math.min(endIndex, filteredProducts.length)} trong tổng số {filteredProducts.length} mục
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(1)}
+            disabled={currentPage === 1}
+            className="border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronsLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <div className="flex items-center gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(page => {
+                return (
+                  page === 1 ||
+                  page === totalPages ||
+                  (page >= currentPage - 1 && page <= currentPage + 1)
+                );
+              })
+              .map((page, index, array) => {
+                if (index > 0 && page - array[index - 1] > 1) {
+                  return (
+                    <React.Fragment key={`ellipsis-${page}`}>
+                      <span className="px-2 text-gray-600 dark:text-gray-400">...</span>
+                      <Button
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(page)}
+                        className={`${
+                          currentPage === page 
+                            ? "bg-primary text-white hover:bg-primary/90" 
+                            : "border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white"
+                        }`}
+                      >
+                        {page}
+                      </Button>
+                    </React.Fragment>
+                  );
+                }
+                return (
+                  <Button
+                    key={page}
+                    variant={currentPage === page ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePageChange(page)}
+                    className={`${
+                      currentPage === page 
+                        ? "bg-primary text-white hover:bg-primary/90" 
+                        : "border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white"
+                    }`}
+                  >
+                    {page}
+                  </Button>
+                );
+              })}
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(totalPages)}
+            disabled={currentPage === totalPages}
+            className="border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronsRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
       {/* Dialog xem đánh giá */}
       <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
         <DialogContent className="sm:max-w-[600px] bg-white dark:bg-gray-800">
