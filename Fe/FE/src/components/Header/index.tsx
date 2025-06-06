@@ -69,7 +69,7 @@ const Header = () => {
     window.addEventListener('storage', handleStorage);
     return () => window.removeEventListener('storage', handleStorage);
   }, []);
-
+  console.log(user?.user?.avatar);
   // Listen for token changes in this tab (after login)
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -121,7 +121,6 @@ const Header = () => {
       }
     }
   };
-
   return (
     <header
       className={`fixed left-0 top-0 w-full z-9999 bg-white transition-all ease-in-out duration-300 ${stickyMenu && "shadow"
@@ -239,9 +238,9 @@ const Header = () => {
                     >
                       <div className="w-11 h-11 bg-gradient-to-tr from-blue-500 to-blue-300 text-blue flex items-center justify-center rounded-full font-bold uppercase text-xl shadow border-2 border-white group-hover:border-blue-400 transition">
                         {avatarPreview ? (
-                          <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover rounded-full" />
-                        ) : (
                           (user?.user?.fullName || user?.user?.email || 'U')[0]
+                        ) : (
+                          <img src={user?.user?.avatar} alt="avatar" className="w-full h-full object-cover rounded-full" />
                         )}
                       </div>
                       <div className="flex flex-col items-start justify-center min-w-0">
@@ -263,11 +262,11 @@ const Header = () => {
                               onChange={handleAvatarChange}
                             />
                             <div className="w-14 h-14 bg-gradient-to-tr from-blue-500 to-blue-300 text-blue flex items-center justify-center rounded-full font-bold uppercase text-2xl shadow mb-2 border-4 border-white relative overflow-hidden">
-                              {avatarPreview ? (
-                                <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover rounded-full" />
-                              ) : (
-                                (user?.user?.fullName || user?.user?.email || 'U')[0]
-                              )}
+                            {avatarPreview ? (
+                          (user?.user?.fullName || user?.user?.email || 'U')[0]
+                        ) : (
+                          <img src={user?.user?.avatar} alt="avatar" className="w-full h-full object-cover rounded-full" />
+                        )}
                               <span className="absolute bottom-0 left-0 w-full bg-black/40 text-xs text-center py-1 opacity-0 group-hover:opacity-100 transition">Update avatar</span>
                             </div>
                           </label>

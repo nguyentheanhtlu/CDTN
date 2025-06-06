@@ -108,6 +108,7 @@ const NewArrival = () => {
           {/* <!-- New Arrivals item --> */}
           {products.products
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .slice(0, 8)
             .map((item) => (
               <ProductItem item={item} key={item._id} />
             ))}

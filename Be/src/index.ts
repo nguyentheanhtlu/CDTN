@@ -19,6 +19,7 @@ import { Server } from 'socket.io';
 import chatRoutes from './routes/chat.routes';
 import { ChatService } from './services/chat.service';
 import chatbotRoutes from './routes/chatbot.routes';
+import recommendationRoutes from './routes/recommendation.routes';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -51,6 +52,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/category', categoryRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/recommendations', recommendationRoutes);
 
 // Basic route
 app.get('/', (req, res) => {
