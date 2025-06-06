@@ -22,7 +22,7 @@ export async function enrichPromptWithData(message: string): Promise<string | nu
   }
 
   // Sản phẩm nhiều lượt mua nhất
-  if (lower.includes('sản phẩm') && (lower.includes('nhiều lượt mua nhất') || lower.includes('bán chạy nhất') || lower.includes('mua nhiều nhất'))) {
+  if (lower.includes('sản phẩm') && (lower.includes('nhiều lượt mua nhất') || lower.includes('bán chạy nhất') || lower.includes('mua nhiều nhất') || lower.includes('bán nhiều nhất') || lower.includes('yêu thích nhiều nhất'))) {
     const product = await Product.findOne().sort({ sold: -1 });
     if (product) {
       return `Dữ liệu sản phẩm bán chạy nhất: Tên: ${product.name}, Số lượt mua: ${product.sold}. Hãy trả lời cho người dùng biết sản phẩm bán chạy nhất là gì và đã bán được bao nhiêu lượt.`;
@@ -30,7 +30,7 @@ export async function enrichPromptWithData(message: string): Promise<string | nu
   }
 
   // Sản phẩm có đánh giá tốt nhất
-  if (lower.includes('sản phẩm') && (lower.includes('đánh giá tốt nhất') || lower.includes('rating cao nhất') || lower.includes('sao cao nhất'))) {
+  if (lower.includes('sản phẩm') && (lower.includes('đánh giá tốt nhất') || lower.includes('cao nhất') || lower.includes('nhiều sao nhất'))) {
     const product = await Product.findOne().sort({ averageRating: -1 });
     if (product) {
       return `Dữ liệu sản phẩm có đánh giá tốt nhất: Tên: ${product.name}, Đánh giá trung bình: ${product.averageRating} sao, Số lượt đánh giá: ${product.reviewCount}. Hãy trả lời cho người dùng biết sản phẩm có đánh giá tốt nhất là gì và có bao nhiêu sao.`;
@@ -38,7 +38,7 @@ export async function enrichPromptWithData(message: string): Promise<string | nu
   }
 
   // Sản phẩm có đánh giá kém nhất
-  if (lower.includes('sản phẩm') && (lower.includes('đánh giá kém nhất') || lower.includes('rating thấp nhất') || lower.includes('sao thấp nhất'))) {
+  if (lower.includes('sản phẩm') && (lower.includes('đánh giá thấp nhất') || lower.includes('rating thấp nhất') || lower.includes('sao thấp nhất'))) {
     const product = await Product.findOne().sort({ averageRating: 1 });
     if (product) {
       return `Dữ liệu sản phẩm có đánh giá kém nhất: Tên: ${product.name}, Đánh giá trung bình: ${product.averageRating} sao, Số lượt đánh giá: ${product.reviewCount}. Hãy trả lời cho người dùng biết sản phẩm có đánh giá kém nhất là gì và có bao nhiêu sao.`;
