@@ -59,6 +59,35 @@ export async function enrichPromptWithData(message: string): Promise<string | nu
     return `Tổng số đơn hàng hiện tại là: ${count}. Hãy trả lời cho người dùng biết.`;
   }
 
+  // Gợi ý sản phẩm theo từ khóa
+  const productKeywords = {
+    'quần áo': ['áo', 'quần', 'váy', 'đầm', 'áo thun', 'áo sơ mi', 'quần jean'],
+    'giày dép': ['giày', 'dép', 'sandal', 'boots', 'sneaker'],
+    'túi xách': ['túi', 'balo', 'cặp', 'ví'],
+    'phụ kiện': ['vòng', 'lắc', 'dây chuyền', 'nhẫn', 'kính', 'mũ'],
+    'mỹ phẩm': ['son', 'kem', 'sữa rửa mặt', 'toner', 'serum'],
+    'đồ điện tử': ['điện thoại', 'laptop', 'tablet', 'máy tính', 'phụ kiện điện tử']
+  };
+
+  for (const [category, keywords] of Object.entries(productKeywords)) {
+    if (lower.includes(category) || keywords.some(keyword => lower.includes(keyword))) {
+      const products = await Product.find({
+        $or: [
+          { name: { $regex: category, $options: 'i' } },
+          { name: { $regex: keywords.join('|'), $options: 'i' } }
+        ]
+      }).limit(5);
+
+      if (products.length > 0) {
+        const productList = products.map(p => 
+          `- ${p.name}: ${p.price.toLocaleString('vi-VN')} VNĐ`
+        ).join('\n');
+        
+        return `Tôi tìm thấy một số sản phẩm ${category} phù hợp với bạn:\n${productList}\n\nHãy trả lời cho người dùng biết về các sản phẩm này và gợi ý họ có thể xem thêm tại trang shop.`;
+      }
+    }
+  }
+
   // ... mở rộng cho các intent khác
 
   return null; // Không nhận diện được ý định đặc biệt
