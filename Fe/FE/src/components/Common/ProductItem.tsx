@@ -34,12 +34,12 @@ const ProductItem = ({ item }: ProductItemProps) => {
   // add to cart
   const handleAddToCart = () => {
     dispatch(addToCart({ productId: item._id, quantity: 1 }));
-    toast.success('Added to cart');
+    toast.success('Đã thêm sản phẩm vào giỏ hàng');
   };
 
   const handleAddToWishlist = () => {
     dispatch(addItemToWishlist(item));
-    toast.success('Added to wishlist');
+    toast.success('Thêm vào danh sách yêu thích');
   };
 
   const handleProductDetail = async (e: React.MouseEvent) => {
