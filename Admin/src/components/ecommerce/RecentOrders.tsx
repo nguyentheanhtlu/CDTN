@@ -529,7 +529,7 @@ export default function RecentOrders() {
                         onClick={() => handlePageChange(page)}
                         className={`${
                           currentPage === page 
-                            ? "bg-primary text-white hover:bg-primary/90" 
+                            ? "bg-primary hover:bg-primary/90" 
                             : "border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white"
                         }`}
                       >

@@ -6,14 +6,18 @@ import ProductList from '../Common/ProductList';
 import CategorySidebar from '../Shop/CategorySidebar';
 import { Product } from '@/types/product';
 import { Category } from '@/types/category';
+import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 const ShopWithSidebar = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<any>({ products: [] });
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [productSidebar, setProductSidebar] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(8);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -52,6 +56,29 @@ const ShopWithSidebar = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Lọc sản phẩm dựa trên từ khóa tìm kiếm
+  const filteredProducts = products.products?.filter((product: Product) =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
+
+  // Tính toán phân trang
+  const totalProducts = filteredProducts.length;
+  const totalPages = Math.ceil(totalProducts / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+
+  // Xử lý thay đổi trang
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // Xử lý thay đổi số sản phẩm trên mỗi trang
+  const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setPageSize(Number(e.target.value));
+    setCurrentPage(1);
   };
 
   if (loading) {
@@ -139,9 +166,84 @@ const ShopWithSidebar = () => {
 
             {/* Content */}
             <div className="xl:max-w-[870px] w-full">
+              {/* Search Bar */}
+              <div className="mb-6">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Tìm kiếm sản phẩm..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                </div>
+              </div>
+
               {/* Product List */}
-              {/* @ts-ignore */}
-              <ProductList products={products.products}/>
+              {currentProducts.length > 0 ? (
+                <ProductList products={currentProducts} />
+              ) : (
+                <div className="text-center py-8">
+                  {searchQuery ? 'Không tìm thấy sản phẩm phù hợp' : 'Không có sản phẩm nào'}
+                </div>
+              )}
+
+              {/* Pagination */}
+              {totalProducts > 0 && (
+                <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">Hiển thị</span>
+                    <select
+                      value={pageSize}
+                      onChange={handlePageSizeChange}
+                      className="border border-gray-300 rounded-md px-2 py-1 text-sm"
+                    >
+                      <option value={4}>4</option>
+                      <option value={8}>8</option>
+                      <option value={12}>12</option>
+                      <option value={16}>16</option>
+                    </select>
+                    <span className="text-sm text-gray-600">
+                      của {totalProducts} sản phẩm
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handlePageChange(1)}
+                      disabled={currentPage === 1}
+                      className="p-2 rounded-md border border-gray-300 disabled:opacity-50"
+                    >
+                      <ChevronsLeft size={20} />
+                    </button>
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="p-2 rounded-md border border-gray-300 disabled:opacity-50"
+                    >
+                      <ChevronLeft size={20} />
+                    </button>
+                    <span className="px-4 py-2">
+                      Trang {currentPage} / {totalPages}
+                    </span>
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="p-2 rounded-md border border-gray-300 disabled:opacity-50"
+                    >
+                      <ChevronRight size={20} />
+                    </button>
+                    <button
+                      onClick={() => handlePageChange(totalPages)}
+                      disabled={currentPage === totalPages}
+                      className="p-2 rounded-md border border-gray-300 disabled:opacity-50"
+                    >
+                      <ChevronsRight size={20} />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
