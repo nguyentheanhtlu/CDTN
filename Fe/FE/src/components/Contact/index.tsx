@@ -6,6 +6,9 @@ import apiService from "@/services/api";
 import { toast } from "react-toastify";
 import { getUserInfo } from "@/api/auth.api";
 
+// Get admin ID from environment
+const adminId = process.env.NEXT_PUBLIC_ADMIN_ID || "680999b959c8fcbccf330429";
+
 interface Message {
   _id: string;
   content: string;
@@ -31,9 +34,6 @@ const Contact = () => {
   const [user, setUser] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Admin ID - bạn cần thay thế bằng ID admin thật
-  const adminId = "680999b959c8fcbccf330429";
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -53,9 +53,11 @@ const Contact = () => {
     if (user?._id) {
       fetchMessages();
       fetchUnreadCount();
+      markMessagesAsRead();
       const interval = setInterval(() => {
         fetchMessages();
         fetchUnreadCount();
+        markMessagesAsRead();
       }, 5000);
       return () => clearInterval(interval);
     }
@@ -82,6 +84,15 @@ const Contact = () => {
       setUnreadCount(response.unreadCount);
     } catch (error) {
       console.error("Lỗi khi lấy số tin nhắn chưa đọc:", error);
+    }
+  };
+
+  const markMessagesAsRead = async () => {
+    try {
+      if (!user?._id) return;
+      await apiService.markMessagesAsRead(user._id, adminId);
+    } catch (error) {
+      console.error("Lỗi khi đánh dấu tin nhắn đã đọc:", error);
     }
   };
 

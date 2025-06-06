@@ -62,4 +62,26 @@ export class ChatController {
       res.status(500).json({ message: 'Error sending message' });
     }
   }
+
+  // Mark messages as read
+  async markAsRead(req: any, res: any) {
+    try {
+      const { userId, adminId } = req.params;
+      
+      await Message.updateMany(
+        {
+          sender: adminId,
+          receiver: userId,
+          isRead: false
+        },
+        {
+          $set: { isRead: true }
+        }
+      );
+
+      res.json({ message: 'Messages marked as read' });
+    } catch (error) {
+      res.status(500).json({ message: 'Error marking messages as read' });
+    }
+  }
 }
