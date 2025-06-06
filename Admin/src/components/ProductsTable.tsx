@@ -595,10 +595,10 @@ export function ProductsTable() {
       {/* Pagination Controls */}
       <div className="flex items-center justify-between border-t border-stroke dark:border-strokedark px-4 py-3 sm:px-6 mt-4">
         <div className="flex items-center gap-2">
-          <p className="text-sm text-gray-700 dark:text-gray-400">
+          <p className="text-sm text-gray-light dark:text-gray-400">
             Hiển thị
             <select
-              className="mx-2 rounded border border-stroke dark:border-strokedark bg-transparent px-2 py-1 text-gray-700 dark:text-gray-400 hover:border-primary dark:hover:border-primary focus:border-primary dark:focus:border-primary focus:outline-none"
+              className="mx-2 rounded border border-stroke dark:border-strokedark bg-transparent px-2 py-1 text-gray-light dark:text-gray-400 hover:border-primary dark:hover:border-primary focus:border-primary dark:focus:border-primary focus:outline-none"
               value={pageSize}
               onChange={(e) => handlePageSizeChange(Number(e.target.value))}
             >
@@ -609,7 +609,7 @@ export function ProductsTable() {
             </select>
             mục
           </p>
-          <p className="text-sm text-gray-700 dark:text-gray-400">
+          <p className="text-sm text-gray-light dark:text-gray-400">
             Hiển thị {startIndex + 1} đến {Math.min(endIndex, filteredProducts.length)} trong tổng số {filteredProducts.length} mục
           </p>
         </div>
@@ -654,7 +654,7 @@ export function ProductsTable() {
                         onClick={() => handlePageChange(page)}
                         className={`${
                           currentPage === page 
-                            ? "bg-primary text-white hover:bg-primary/90" 
+                            ? "bg-primary hover:bg-primary/90" 
                             : "border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white"
                         }`}
                       >
@@ -671,7 +671,7 @@ export function ProductsTable() {
                     onClick={() => handlePageChange(page)}
                     className={`${
                       currentPage === page 
-                        ? "bg-primary text-white hover:bg-primary/90" 
+                        ? "bg-primary hover:bg-primary/90" 
                         : "border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white"
                     }`}
                   >
