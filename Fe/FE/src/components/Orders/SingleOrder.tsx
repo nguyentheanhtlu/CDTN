@@ -36,10 +36,12 @@ const SingleOrder: React.FC<SingleOrderProps> = ({ orderItem, smallView, onCance
     setShowEdit(status);
   };
 
+  console.log("orderItem",orderItem);
+
   const handleCancelOrder = async () => {
     if (!onCancelOrder) return;
     
-    if (orderItem.orderStatus !== 'pending') {
+    if (orderItem.orderStatus !== 'PENDING') {
       toast.error('Chỉ có thể hủy đơn hàng đang ở trạng thái chờ xử lý');
       return;
     }
@@ -192,11 +194,11 @@ const SingleOrder: React.FC<SingleOrderProps> = ({ orderItem, smallView, onCance
             <strong className="ml-2 text-lg">{orderItem.finalAmount.toLocaleString('vi-VN')}đ</strong>
           </div>
           <div className="order-actions flex gap-2">
-            {orderItem.orderStatus === 'pending' && onCancelOrder && (
+            {orderItem.orderStatus == 'PENDING' && onCancelOrder && (
               <button
                 onClick={handleCancelOrder}
                 disabled={isCancelling}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-white bg-red-light rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
               >
                 {isCancelling ? 'Đang hủy...' : 'Hủy đơn hàng'}
               </button>

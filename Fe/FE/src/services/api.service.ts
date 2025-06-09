@@ -189,6 +189,10 @@ class ApiService {
     const response = await this.api.get<Order[]>('/orders/my-orders');
     return response.data;
   }
+  async cancelOrder(orderId: string) {
+    const response = await this.api.post<{ message: string; order: Order }>(`/orders/${orderId}/cancel`);
+    return response.data;
+  }
 
   async getAllOrders(params?: { status?: string; page?: number; limit?: number }) {
     const response = await this.api.get<{ orders: Order[]; total: number; page: number; totalPages: number }>('/orders', { params });

@@ -75,7 +75,7 @@ interface Order {
   totalAmount: number;
   paymentMethod: string;
   paymentStatus: "PENDING" | "PAID" | "FAILED";
-  orderStatus: "PENDING" | "PROCESSING" | "DELIVERED" | "CANCELED";
+  orderStatus: "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
   appliedVoucher: string | null;
   vnp_TxnRef: string | null;
   createdAt: string;
@@ -97,11 +97,35 @@ export default function RecentOrders() {
   const [totalOrders, setTotalOrders] = useState(0);
 
   // Filter orders based on search query
-  const filteredOrders = orders.filter(order => 
-    order._id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    order.user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    order.user.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredOrders = orders.filter(order => {
+    const searchLower = searchQuery.toLowerCase();
+    
+    // Helper to get Vietnamese status text
+    const getVietnameseStatus = (status: Order["orderStatus"]) => {
+      switch (status) {
+        case "PENDING": return "chờ xử lý";
+        case "PROCESSING": return "đang xử lý";
+        case "SHIPPED": return "đang giao hàng";
+        case "DELIVERED": return "đã giao";
+        case "CANCELLED": return "đã hủy";
+        default: return "";
+      }
+    };
+
+    return (
+      order._id.toLowerCase().includes(searchLower) ||
+      order.user.fullName.toLowerCase().includes(searchLower) ||
+      order.user.email.toLowerCase().includes(searchLower) ||
+      (order.shippingAddress?.phone?.toLowerCase() || '').includes(searchLower) ||
+      (order.shippingAddress?.addressLine?.toLowerCase() || '').includes(searchLower) ||
+      (order.shippingAddress?.ward?.toLowerCase() || '').includes(searchLower) ||
+      (order.shippingAddress?.district?.toLowerCase() || '').includes(searchLower) ||
+      (order.shippingAddress?.province?.toLowerCase() || '').includes(searchLower) ||
+      order.paymentMethod.toLowerCase().includes(searchLower) ||
+      getVietnameseStatus(order.orderStatus).includes(searchLower) ||
+      order.items.some(item => item.product.name.toLowerCase().includes(searchLower))
+    );
+  });
 
   // Calculate pagination with filtered orders
   const totalPages = Math.ceil(filteredOrders.length / pageSize);
@@ -244,10 +268,12 @@ export default function RecentOrders() {
         return "warning";
       case "PROCESSING":
         return "info";
-      case "CANCELED":
+      case "CANCELLED":
         return "error";
+      case "SHIPPED":
+        return "info";
       default:
-        return "success";
+        return "light";
     }
   };
 
@@ -271,7 +297,9 @@ export default function RecentOrders() {
         'Trạng thái đơn hàng': order.orderStatus === "PENDING" ? "Chờ xử lý" :
                               order.orderStatus === "PROCESSING" ? "Đang xử lý" :
                               order.orderStatus === "DELIVERED" ? "Đã giao" :
-                              "Đã hủy"
+                              order.orderStatus === "SHIPPED" ? "Đang giao" :
+                              order.orderStatus === "CANCELLED" ? "Đã hủy" :
+                              "Không xác định"
       }));
 
       // Create worksheet
@@ -415,7 +443,9 @@ export default function RecentOrders() {
                         {order.orderStatus === "PENDING" ? "Chờ xử lý" :
                          order.orderStatus === "PROCESSING" ? "Đang xử lý" :
                          order.orderStatus === "DELIVERED" ? "Đã giao" :
-                         "Đã hủy"}
+                         order.orderStatus === "SHIPPED" ? "Đang giao" :
+                         order.orderStatus === "CANCELLED" ? "Đã hủy" :
+                         "Không xác định"}
                       </Badge>
                     </TableCell>
                     <TableCell className="py-5 px-4">
@@ -427,18 +457,19 @@ export default function RecentOrders() {
                             setSelectedOrder(order);
                             setDetailsDialogOpen(true);
                           }}
-                          className="border-primary text-primary  dark:border-primary dark:text-primary dark:hover:bg-primary"
+                          className="text-primary hover:bg-primary/10 dark:text-primary dark:hover:bg-primary/10"
                         >
-                          Xem chi tiết
+                          Chi tiết
                         </Button>
                         <Button
-                          variant="outline" 
+                          variant="default"
                           size="sm"
                           onClick={() => {
                             setSelectedOrder(order);
                             setStatusDialogOpen(true);
                           }}
-                          className="border-primary text-primary  dark:border-primary dark:text-primary dark:hover:bg-primary"
+                          className="bg-accent hover:bg-accent/90"
+                          disabled={order.orderStatus === "CANCELLED"}
                         >
                           Cập nhật trạng thái
                         </Button>
@@ -450,160 +481,102 @@ export default function RecentOrders() {
             </Table>
           </div>
 
-          {/* Pagination Controls */}
-          <div className="flex items-center justify-between border-t border-stroke dark:border-strokedark px-4 py-3 sm:px-6 mt-4">
-            <div className="flex items-center gap-2">
-              <p className="text-sm text-gray-700 dark:text-gray-400">
-                Hiển thị
-                <select
-                  className="mx-2 rounded border border-stroke dark:border-strokedark bg-transparent px-2 py-1 text-gray-700 dark:text-gray-400 hover:border-primary dark:hover:border-primary focus:border-primary dark:focus:border-primary focus:outline-none"
-                  value={pageSize}
-                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                </select>
-                mục
-              </p>
-              <p className="text-sm text-gray-700 dark:text-gray-400">
-                Hiển thị {startIndex + 1} đến {Math.min(endIndex, totalOrders)} trong tổng số {totalOrders} mục
-              </p>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(1)}
-                disabled={currentPage === 1}
-                className="border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronsLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              
-              <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter(page => {
-                    return (
-                      page === 1 ||
-                      page === totalPages ||
-                      (page >= currentPage - 1 && page <= currentPage + 1)
-                    );
-                  })
-                  .map((page, index, array) => {
-                    if (index > 0 && page - array[index - 1] > 1) {
-                      return (
-                        <React.Fragment key={`ellipsis-${page}`}>
-                          <span className="px-2 text-gray-600 dark:text-gray-400">...</span>
-                          <Button
-                            variant={currentPage === page ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => handlePageChange(page)}
-                            className={`${
-                              currentPage === page 
-                                ? "bg-primary text-white hover:bg-primary/90" 
-                                : "border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white"
-                            }`}
-                          >
-                            {page}
-                          </Button>
-                        </React.Fragment>
-                      );
-                    }
-                    return (
+          {totalPages > 1 && (
+            <div className="mt-6 flex justify-center">
+              <nav>
+                <ul className="flex items-center space-x-2">
+                  <li>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="border-gray-300 text-gray-600 hover:bg-gray-100 dark:border-strokedark dark:text-gray-400 dark:hover:bg-boxdark-2"
+                    >
+                      Trước
+                    </Button>
+                  </li>
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <li key={i}>
                       <Button
-                        key={page}
-                        variant={currentPage === page ? "default" : "outline"}
+                        variant={currentPage === i + 1 ? "default" : "outline"}
                         size="sm"
-                        onClick={() => handlePageChange(page)}
-                        className={`${
-                          currentPage === page 
-                            ? "bg-primary hover:bg-primary/90" 
-                            : "border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white"
-                        }`}
+                        onClick={() => handlePageChange(i + 1)}
+                        className={
+                          currentPage === i + 1
+                            ? "bg-primary hover:bg-primary/90"
+                            : "border-gray-300 text-gray-600 hover:bg-gray-100 dark:border-strokedark dark:text-gray-400 dark:hover:bg-boxdark-2"
+                        }
                       >
-                        {page}
+                        {i + 1}
                       </Button>
-                    );
-                  })}
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(totalPages)}
-                disabled={currentPage === totalPages}
-                className="border-stroke dark:border-strokedark hover:bg-gray-100 dark:hover:bg-boxdark-2 hover:text-black dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronsRight className="h-4 w-4" />
-              </Button>
+                    </li>
+                  ))}
+                  <li>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="border-gray-300 text-gray-600 hover:bg-gray-100 dark:border-strokedark dark:text-gray-400 dark:hover:bg-boxdark-2"
+                    >
+                      Tiếp
+                    </Button>
+                  </li>
+                </ul>
+              </nav>
             </div>
-          </div>
+          )}
         </>
       )}
 
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
-        <DialogContent className="bg-white dark:bg-boxdark">
+        <DialogContent className="bg-white dark:bg-boxdark max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-black dark:text-white">Chi tiết đơn hàng</DialogTitle>
           </DialogHeader>
           {selectedOrder && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold text-black dark:text-white mb-3">Thông tin đơn hàng</h3>
-                <div className="space-y-2 text-gray-600 dark:text-gray-400">
-                  <p>Mã đơn hàng: <span className="text-black dark:text-white">#{selectedOrder._id.slice(-6)}</span></p>
-                  <p>Ngày đặt: <span className="text-black dark:text-white">{new Date(selectedOrder.createdAt).toLocaleString()}</span></p>
-                  <p>Phương thức thanh toán: <span className="text-black dark:text-white">{selectedOrder.paymentMethod}</span></p>
-                  <p>Trạng thái thanh toán: 
-                    <Badge color={selectedOrder.paymentStatus === "PAID" ? "success" : "warning"}>
-                      {selectedOrder.paymentStatus === "PAID" ? "Đã thanh toán" :
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-black dark:text-white mb-3">Thông tin chung</h3>
+                  <div className="space-y-2 text-gray-600 dark:text-gray-400">
+                    <p>Mã đơn hàng: <span className="font-medium text-black dark:text-white">#{selectedOrder._id.slice(-6)}</span></p>
+                    <p>Ngày đặt: <span className="font-medium text-black dark:text-white">{new Date(selectedOrder.createdAt).toLocaleString('vi-VN')}</span></p>
+                    <p>Tổng tiền: <span className="font-medium text-black dark:text-white">{selectedOrder.totalAmount.toLocaleString('vi-VN')}đ</span></p>
+                    <p>Phương thức thanh toán: <span className="font-medium text-black dark:text-white">{selectedOrder.paymentMethod}</span></p>
+                    <p>Trạng thái thanh toán:
+                      <Badge color={selectedOrder.paymentStatus === "PAID" ? "success" : selectedOrder.paymentStatus === "PENDING" ? "warning" : "error"}>
+                       {selectedOrder.paymentStatus === "PAID" ? "Đã thanh toán" :
                        selectedOrder.paymentStatus === "PENDING" ? "Chờ thanh toán" :
                        "Thanh toán thất bại"}
-                    </Badge>
-                  </p>
-                  <p>Trạng thái đơn hàng: 
-                    <Badge color={getStatusColor(selectedOrder.orderStatus)}>
-                      {selectedOrder.orderStatus === "PENDING" ? "Chờ xử lý" :
-                       selectedOrder.orderStatus === "PROCESSING" ? "Đang xử lý" :
-                       selectedOrder.orderStatus === "DELIVERED" ? "Đã giao" :
-                       "Đã hủy"}
-                    </Badge>
-                  </p>
+                      </Badge>
+                    </p>
+                    <p>Trạng thái đơn hàng:
+                      <Badge color={getStatusColor(selectedOrder.orderStatus)}>
+                        {selectedOrder.orderStatus === "PENDING" ? "Chờ xử lý" :
+                         selectedOrder.orderStatus === "PROCESSING" ? "Đang xử lý" :
+                         selectedOrder.orderStatus === "DELIVERED" ? "Đã giao" :
+                         selectedOrder.orderStatus === "SHIPPED" ? "Đang giao" :
+                         selectedOrder.orderStatus === "CANCELLED" ? "Đã hủy" :
+                         "Không xác định"}
+                      </Badge>
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-black dark:text-white mb-3">Thông tin khách hàng</h3>
-                <div className="space-y-2 text-gray-600 dark:text-gray-400">
-                  <p>Tên: <span className="text-black dark:text-white">{selectedOrder.user.fullName}</span></p>
-                  <p>Email: <span className="text-black dark:text-white">{selectedOrder.user.email}</span></p>
-                  <p>Tên người nhận: <span className="text-black dark:text-white">{selectedOrder.shippingAddress?.name || 'Chưa có tên'}</span></p>
-                  <p>Số điện thoại: <span className="text-black dark:text-white">{selectedOrder.shippingAddress?.phone || 'Chưa có số điện thoại'}</span></p>
-                  <p>Địa chỉ: <span className="text-black dark:text-white">
-                    {selectedOrder.shippingAddress ? 
-                      `${selectedOrder.shippingAddress.addressLine}, ${selectedOrder.shippingAddress.ward}, ${selectedOrder.shippingAddress.district}, ${selectedOrder.shippingAddress.province}` 
-                      : 'Chưa có địa chỉ'}
-                  </span></p>
+                <div>
+                  <h3 className="text-lg font-semibold text-black dark:text-white mb-3">Thông tin khách hàng</h3>
+                  <div className="space-y-2 text-gray-600 dark:text-gray-400">
+                    <p>Tên: <span className="text-black dark:text-white">{selectedOrder.user.fullName}</span></p>
+                    <p>Email: <span className="text-black dark:text-white">{selectedOrder.user.email}</span></p>
+                    <p>Tên người nhận: <span className="text-black dark:text-white">{selectedOrder.shippingAddress?.name || 'Chưa có tên'}</span></p>
+                    <p>Số điện thoại: <span className="text-black dark:text-white">{selectedOrder.shippingAddress?.phone || 'Chưa có số điện thoại'}</span></p>
+                    <p>Địa chỉ: <span className="text-black dark:text-white">
+                      {selectedOrder.shippingAddress ?
+                        `${selectedOrder.shippingAddress.addressLine}, ${selectedOrder.shippingAddress.ward}, ${selectedOrder.shippingAddress.district}, ${selectedOrder.shippingAddress.province}`
+                        : 'Chưa có địa chỉ'}
+                    </span></p>
+                  </div>
                 </div>
               </div>
               <div>
@@ -635,8 +608,8 @@ export default function RecentOrders() {
             </div>
           )}
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setDetailsDialogOpen(false)}
               className="border-primary text-primary  dark:border-primary dark:text-primary dark:hover:bg-primary"
             >
@@ -660,20 +633,22 @@ export default function RecentOrders() {
           {selectedOrder && (
             <div className="space-y-6">
               <div className="space-y-2">
-                <p className="text-gray-600 dark:text-gray-400">Trạng thái hiện tại: 
-                  <Badge color={getStatusColor(selectedOrder.orderStatus)}>
-                    {selectedOrder.orderStatus === "PENDING" ? "Chờ xử lý" :
-                     selectedOrder.orderStatus === "PROCESSING" ? "Đang xử lý" :
-                     selectedOrder.orderStatus === "DELIVERED" ? "Đã giao" :
-                     "Đã hủy"}
+                <p className="text-gray-600 dark:text-gray-400">Trạng thái hiện tại:
+                  <Badge color={getStatusColor(selectedOrder?.orderStatus)}>
+                    {selectedOrder?.orderStatus === "PENDING" ? "Chờ xử lý" :
+                     selectedOrder?.orderStatus === "PROCESSING" ? "Đang xử lý" :
+                     selectedOrder?.orderStatus === "DELIVERED" ? "Đã giao" :
+                     selectedOrder?.orderStatus === "SHIPPED" ? "Đang giao" :
+                     selectedOrder?.orderStatus === "CANCELLED" ? "Đã hủy" :
+                     "Không xác định"}
                   </Badge>
                 </p>
                 <Select
                   onValueChange={(value: Order["orderStatus"]) =>
-                    handleStatusUpdate(selectedOrder._id, value)
+                    handleStatusUpdate(selectedOrder?._id, value)
                   }
-                  defaultValue={selectedOrder.orderStatus}
-                  disabled={isUpdating}
+                  defaultValue={selectedOrder?.orderStatus}
+                  disabled={isUpdating || selectedOrder?.orderStatus === "CANCELLED"}
                 >
                   <SelectTrigger className="w-full border-stroke dark:border-strokedark">
                     <SelectValue placeholder="Chọn trạng thái mới" />
@@ -682,7 +657,8 @@ export default function RecentOrders() {
                     <SelectItem value="PENDING">Chờ xử lý</SelectItem>
                     <SelectItem value="PROCESSING">Đang xử lý</SelectItem>
                     <SelectItem value="DELIVERED">Đã giao</SelectItem>
-                    <SelectItem value="CANCELED">Đã hủy</SelectItem>
+                    <SelectItem value="SHIPPED">Đang giao</SelectItem>
+                    <SelectItem value="CANCELLED">Đã hủy</SelectItem>
                   </SelectContent>
                 </Select>
                 {error && (
@@ -693,8 +669,8 @@ export default function RecentOrders() {
               </div>
               <DialogFooter>
                 <div className="flex gap-3">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       setStatusDialogOpen(false);
                       setError(null);
@@ -726,7 +702,9 @@ export default function RecentOrders() {
                 {pendingStatusUpdate?.newStatus === "PENDING" ? "Chờ xử lý" :
                  pendingStatusUpdate?.newStatus === "PROCESSING" ? "Đang xử lý" :
                  pendingStatusUpdate?.newStatus === "DELIVERED" ? "Đã giao" :
-                 "Đã hủy"}
+                 pendingStatusUpdate?.newStatus === "SHIPPED" ? "Đang giao" :
+                 pendingStatusUpdate?.newStatus === "CANCELLED" ? "Đã hủy" :
+                 "Không xác định"}
               </span>?
             </p>
           </div>
