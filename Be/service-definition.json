@@ -1,0 +1,36 @@
+{
+    "cluster": "cdtn-cluster",
+    "serviceName": "cdtn-backend-service",
+    "taskDefinition": "cdtn-backend",
+    "desiredCount": 1,
+    "launchType": "FARGATE",
+    "platformVersion": "LATEST",
+    "networkConfiguration": {
+        "awsvpcConfiguration": {
+            "subnets": [
+                "subnet-xxxxxxxxxxxxxxxxx",
+                "subnet-yyyyyyyyyyyyyyyyy"
+            ],
+            "securityGroups": [
+                "sg-zzzzzzzzzzzzzzzzz"
+            ],
+            "assignPublicIp": "ENABLED"
+        }
+    },
+    "loadBalancers": [
+        {
+            "targetGroupArn": "arn:aws:elasticloadbalancing:ap-southeast-1:<YOUR-AWS-ACCOUNT-ID>:targetgroup/cdtn-backend-tg/xxxxxxxxxxxxxxxx",
+            "containerName": "cdtn-backend",
+            "containerPort": 3000
+        }
+    ],
+    "healthCheckGracePeriodSeconds": 60,
+    "deploymentConfiguration": {
+        "maximumPercent": 200,
+        "minimumHealthyPercent": 100,
+        "deploymentCircuitBreaker": {
+            "enable": true,
+            "rollback": true
+        }
+    }
+} 

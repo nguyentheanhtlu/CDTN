@@ -5,6 +5,7 @@ import { Product } from '../models/product.model';
 import { payWithVNPay, payWithMoMo } from './payment.controller'; // Import các hàm thanh toán
 import { User } from '../models/user.model';
 import { sendOrderConfirmationEmail } from '../utils/sendEmail';
+import { Types } from 'mongoose';
 
 interface AuthRequest extends Request {
     user?: any;
@@ -484,3 +485,45 @@ export const updatePaymentStatus = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ message: 'Lỗi khi cập nhật trạng thái thanh toán', error });
     }
 }; 
+
+export const cancelOrder = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user._id;
+
+        // Tìm đơn hàng
+        const order = await Order.findById(id);
+        if (!order) {
+            return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
+        }
+        // Chỉ chủ đơn hàng mới được hủy
+        if (!(order.user as Types.ObjectId).equals(userId)) {
+            return res.status(403).json({ message: 'Bạn không có quyền hủy đơn hàng này' });
+        }
+
+        // Chỉ được hủy khi trạng thái là "pending"
+        if (order.orderStatus.toLowerCase() !== 'pending') {
+            return res.status(400).json({ message: 'Chỉ có thể hủy đơn hàng đang ở trạng thái chờ xử lý' });
+        }
+
+        // Cập nhật trạng thái đơn hàng
+        order.orderStatus = 'CANCELLED';    
+        order.paymentStatus = 'FAILED';
+
+        // Hoàn trả số lượng sản phẩm vào kho và giảm số lượng đã bán
+        for (const item of order.items) {
+            const product = await Product.findById(item.product);
+            if (product) {
+                product.stock += item.quantity; // Tăng lại số lượng trong kho
+                product.sold -= item.quantity;  // Giảm số lượng đã bán
+                await product.save();
+            }
+        }
+
+        await order.save();
+
+        res.json({ message: 'Đã hủy đơn hàng thành công', order });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi khi hủy đơn hàng', error });
+    }
+};

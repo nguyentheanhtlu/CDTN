@@ -102,11 +102,11 @@ const Orders = () => {
 
   const handleCancelOrder = async (orderId: string) => {
     try {
-      await apiService.updateOrderStatus(orderId, { orderStatus: 'CANCELLED' });
+      await apiService.cancelOrder(orderId);
       toast.success('Hủy đơn hàng thành công');
       fetchOrders();
-    } catch (err) {
-      toast.error('Không thể hủy đơn hàng');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Không thể hủy đơn hàng');
     }
   };
 

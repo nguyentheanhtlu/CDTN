@@ -13,6 +13,7 @@ router.get('/my-orders', orderController.getUserOrders);
 router.get('/:id', orderController.getOrderDetail);
 router.get('/:orderId/payment-status', orderController.checkPaymentStatus);
 router.post('/:orderId/update-payment', orderController.updatePaymentStatus);
+router.post('/:id/cancel', orderController.cancelOrder);
 
 // Admin routes
 router.use((req: any, res: any, next: any) => {
